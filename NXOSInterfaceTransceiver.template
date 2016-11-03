@@ -1,0 +1,40 @@
+﻿{Interface*:Ethernet1/29}
+    transceiver is {TransceiverPresent:present}
+    type is {Type:10Gbase-SR}
+    name is {Name:CISCO-FINISAR}
+    part number is {PartNumber:FTLX8571D3BCL-C2}
+    revision is {Revision:A}
+    serial number is {SerialNumber:FNS1602082X}
+    nominal bitrate is {NormalMegaBitRate:10300} MBit/sec
+    Link length supported for 50/125um fiber is 80 m
+    Link length supported for 50/125um fiber is 300 m
+    Link length supported for 62.5/125um fiber is 20 m
+    cisco id is {CiscoID:--}
+    cisco extended id number is {CiscoExtendedID:4}
+
+{Interface*:Ethernet1/30}
+    transceiver is {TransceiverPresent:present}
+    type is {Type:1000base-T}
+    name is {Name:CISCO-METHODE}
+    part number is {PartNumber:SP7041_Rev_F}
+    revision is {Revision:F}
+    serial number is {SerialNumber:MTC17400MJB}
+    nominal bitrate is {NormalMegaBitRate:1300} MBit/sec
+    Link length supported for copper is 100 m
+    cisco id is {CiscoID:--}
+    cisco extended id number is {CiscoExtendedID:4}
+
+{Interface*:Ethernet1/31}
+    transceiver is {TransceiverPresent:present}
+    type is {Type:SFP-H10GB-CU1M}
+    name is {Name:CISCO-MOLEX}
+    part number is {PartNumber:74752-9044}
+    revision is {Revision:07}
+    serial number is {SerialNumber:MOC14512007}
+    nominal bitrate is {NormalMegaBitRate:10300} MBit/sec
+    Link length supported for copper is 1 m
+    cisco id is {CiscoID:--}
+    cisco extended id number is {CiscoExtendedID:4}
+
+{Interface*:Ethernet100/1/20}
+    transceiver is {TransceiverPresent:not present}

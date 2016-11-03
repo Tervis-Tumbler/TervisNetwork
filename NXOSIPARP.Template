@@ -1,0 +1,6 @@
+﻿{IPAddress*:10.172.248.3}    {Age:00:00:29}  {MACAddress:0025.b51a.004f}  Vlan{VLAN:248}         
+{IPAddress*:10.172.248.5}    {Age:00:00:17}  {MACAddress:INCOMPLETE}      Vlan{VLAN:248}         
+{IPAddress*:10.200.0.8}      {Age:00:07:00}  {MACAddress:0000.0c07.acc8}  Vlan{VLAN:200}         
+{IPAddress*:10.172.70.1}     {Age:00:15:01}  {MACAddress:0060.1641.4c1b}  Vlan{VLAN:70}          
+{IPAddress*:10.172.44.222}      {Age:-}      {MACAddress:0100.5e7f.2cde}  Vlan{VLAN:44} 
+{IPAddress*:10.2.2.250}         {Age:-}      {MACAddress:00000.0c07.ac02}  Vlan{VLAN:2}           

@@ -1,0 +1,20 @@
+﻿Legend: 
+	* - primary entry, G - Gateway MAC, (R) - Routed MAC, O - Overlay MAC
+	age - seconds since last seen,+ - primary entry using vPC Peer-Link
+   VLAN     MAC Address      Type      age     Secure NTFY    Ports          
+---------+-----------------+--------+---------+------+----+------------------
+* 34       0000.0c07.ac22    static    0          F    F  Router
+* 34       0005.73e3.cbfc    static    0          F    F  Router
+* 34       0005.73ee.a1bc    static    0          F    F  Po1516
+* 28       0007.7d76.cd0c    dynamic   0          F    F  Po111
+* 28       0007.7d76.d8f4    dynamic   0          F    F  Po112
+* 28       5087.890e.f754    dynamic   0          F    F  Eth100/1/19
+* 72       0015.5d01.8f41    dynamic   0          F    F  Po255
++ 72       0026.b976.c689    dynamic   0          F    F  Po1516
+* 72       0034.da61.b76a    dynamic   10         F    F  Po1817
+* 72       00ae.fa58.d5c0    dynamic   10         F    F  Po1817
+* 72       00ae.faf4.99b5    dynamic   300        F    F  Po1817
+* 72       00ae.fafb.1b9e    dynamic   30         F    F  Po1817
+* 72       00cd.fe6c.ca22    dynamic   60         F    F  Po1817
+* 72       00cd.fea0.313f    dynamic   100        F    F  Po1817
+* 72       00cd.fee0.8c35    dynamic   230        F    F  Po1817

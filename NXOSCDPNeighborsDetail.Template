@@ -1,0 +1,290 @@
+﻿----------------------------------------
+Device ID:{DeviceID*:TERV-NX02.tervis.prv}(SSI151306EF)
+System Name:{SystemName:TERV-NX02}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.8.128.2}
+Platform: N5K-C5548UP, Capabilities: Switch IGMP Filtering Supports-STP-Dispute 
+Interface: mgmt0, Port ID (outgoing port): mgmt0
+Holdtime: 147 sec
+
+Version:
+Cisco Nexus Operating System (NX-OS) Software, Version 5.0(3)N2(2)
+
+Advertisement Version: 2
+VTP Management Domain: Tervis.prv
+Duplex: full
+Physical Location: 201 Triple Diamond Ave - Venice, FL
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.8.128.2}
+
+----------------------------------------
+Device ID:{DeviceID*:MDFB-UCS-A}(SSI153409YD)
+System Name:{SystemName:MDFB-UCS-A}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.101}
+Platform: UCS-FI-6248UP, Capabilities: Switch IGMP Filtering Supports-STP-Dispute 
+Interface: Ethernet1/9, Port ID (outgoing port): Ethernet1/17
+Holdtime: 159 sec
+
+Version:
+Cisco Nexus Operating System (NX-OS) Software, Version 5.0(3)N2(2.11.3b)
+
+Advertisement Version: 2
+Native VLAN: 1
+Duplex: full
+Physical Location: Tervis HQ
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.101}
+
+----------------------------------------
+Device ID:{DeviceID*:MDFB-UCS-A}(SSI153409YD)
+System Name:{SystemName:MDFB-UCS-A}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.101}
+Platform: UCS-FI-6248UP, Capabilities: Switch IGMP Filtering Supports-STP-Dispute 
+Interface: Ethernet1/10, Port ID (outgoing port): Ethernet1/18
+Holdtime: 159 sec
+
+Version:
+Cisco Nexus Operating System (NX-OS) Software, Version 5.0(3)N2(2.11.3b)
+
+Advertisement Version: 2
+Native VLAN: 1
+Duplex: full
+Physical Location: Tervis HQ
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.101}
+
+----------------------------------------
+Device ID:{DeviceID*:MDFB-UCS-B}(SSI15380CFG)
+System Name:{SystemName:MDFB-UCS-B}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.102}
+Platform: UCS-FI-6248UP, Capabilities: Switch IGMP Filtering Supports-STP-Dispute 
+Interface: Ethernet1/15, Port ID (outgoing port): Ethernet1/19
+Holdtime: 147 sec
+
+Version:
+Cisco Nexus Operating System (NX-OS) Software, Version 5.0(3)N2(2.11.3b)
+
+Advertisement Version: 2
+Native VLAN: 1
+Duplex: full
+Physical Location: Tervis HQ
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.102}
+
+----------------------------------------
+Device ID:{DeviceID*:IDFA-STK.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.213}
+Platform: cisco WS-C2960X-48FPD-L, Capabilities: Switch IGMP Filtering 
+Interface: Ethernet1/17, Port ID (outgoing port): TenGigabitEthernet1/0/1
+Holdtime: 122 sec
+
+Version:
+Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.0(2)EX5, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2014 by Cisco Systems, Inc.
+Compiled Fri 21-Feb-14 05:54 by prod_rel_team
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.213}
+
+----------------------------------------
+Device ID:{DeviceID*:IDFB-S1.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.216}
+Platform: cisco WS-C2960S-48FPS-L, Capabilities: Switch IGMP Filtering 
+Interface: Ethernet1/18, Port ID (outgoing port): GigabitEthernet1/0/49
+Holdtime: 142 sec
+
+Version:
+Cisco IOS Software, C2960S Software (C2960S-UNIVERSALK9-M), Version 12.2(53)SE2, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2010 by Cisco Systems, Inc.
+Compiled Wed 21-Apr-10 06:08 by prod_rel_team
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.216
+
+----------------------------------------
+Device ID:{DeviceID*:IDFC-S1.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.219}
+Platform: cisco WS-C2960S-48FPS-L, Capabilities: Switch IGMP Filtering 
+Interface: Ethernet1/19, Port ID (outgoing port): GigabitEthernet1/0/49
+Holdtime: 132 sec
+
+Version:
+Cisco IOS Software, C2960S Software (C2960S-UNIVERSALK9-M), Version 12.2(53)SE2, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2010 by Cisco Systems, Inc.
+Compiled Wed 21-Apr-10 06:08 by prod_rel_team
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.219
+
+----------------------------------------
+Device ID:{DeviceID*:MDFA-R3-Rear.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.210}
+Platform: cisco WS-C2960S-48FPD-L, Capabilities: Switch IGMP Filtering 
+Interface: Ethernet1/20, Port ID (outgoing port): TenGigabitEthernet1/0/1
+Holdtime: 170 sec
+
+Version:
+Cisco IOS Software, C2960S Software (C2960S-UNIVERSALK9-M), Version 12.2(53)SE2, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2010 by Cisco Systems, Inc.
+Compiled Wed 21-Apr-10 06:08 by prod_rel_team
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.210
+
+----------------------------------------
+Device ID:{DeviceID*:MDFA-R2-S2.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.209}
+Platform: cisco WS-C2960S-48FPS-L, Capabilities: Switch IGMP Filtering 
+Interface: Ethernet1/21, Port ID (outgoing port): GigabitEthernet1/0/49
+Holdtime: 121 sec
+
+Version:
+Cisco IOS Software, C2960S Software (C2960S-UNIVERSALK9-M), Version 12.2(53)SE2, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2010 by Cisco Systems, Inc.
+Compiled Wed 21-Apr-10 06:08 by prod_rel_team
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.209
+
+----------------------------------------
+Device ID:{DeviceID*:IDF2B-STK.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.248.215}
+Platform: cisco WS-C2960S-48FPD-L, Capabilities: Switch IGMP Filtering 
+Interface: Ethernet1/28, Port ID (outgoing port): TenGigabitEthernet1/0/1
+Holdtime: 133 sec
+
+Version:
+Cisco IOS Software, C2960S Software (C2960S-UNIVERSALK9-M), Version 12.2(55)SE2, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2011 by Cisco Systems, Inc.
+Compiled Tue 11-Jan-11 02:23 by prod_rel_team
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.172.248.215}
+
+----------------------------------------
+Device ID:{DeviceID*:TERV-NX02.tervis.prv}(SSI151306EF)
+System Name:{SystemName:TERV-NX02}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.54.1.62}
+Platform: N5K-C5548UP, Capabilities: Switch IGMP Filtering Supports-STP-Dispute 
+Interface: Ethernet1/31, Port ID (outgoing port): Ethernet1/31
+Holdtime: 147 sec
+
+Version:
+Cisco Nexus Operating System (NX-OS) Software, Version 5.0(3)N2(2)
+
+Advertisement Version: 2
+Native VLAN: 1
+VTP Management Domain: Tervis.prv
+Duplex: full
+Physical Location: 201 Triple Diamond Ave - Venice, FL
+Mgmt address(es):
+    IPv4 Address: {ManagementAddress:10.8.128.2}
+
+----------------------------------------
+Device ID:{DeviceID*:TER-GWAY-1.tervis.prv}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.200.0.155}
+Platform: Cisco CISCO2901/K9, Capabilities: Router Switch IGMP Filtering 
+Interface: Ethernet100/1/9, Port ID (outgoing port): GigabitEthernet0/0
+Holdtime: 151 sec
+
+Version:
+Cisco IOS Software, C2900 Software (C2900-UNIVERSALK9-M), Version 15.1(3)T1, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2011 by Cisco Systems, Inc.
+Compiled Sun 27-Mar-11 07:36 by prod_rel_team
+
+Advertisement Version: 2
+VTP Management Domain: 
+Duplex: full
+
+----------------------------------------
+Device ID:{DeviceID*:000c29c49adb}
+System Name:{SystemName:CISCOPRIME}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.84.240}
+Platform: Cisco-VM-SPID, Capabilities: Host 
+Interface: Ethernet100/1/16, Port ID (outgoing port): eth0
+Holdtime: 157 sec
+
+Version:
+Cisco Application Deployment Engine OS version: 2.0.1.038 Copyright (c) 2015 Cisco Systems.
+
+Advertisement Version: 2
+
+----------------------------------------
+Device ID:{DeviceID*:WLC1-Standby}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.84.1}
+Platform: AIR-CT5508-K9, Capabilities: Host 
+Interface: Ethernet100/1/17, Port ID (outgoing port): LAGInterface0/3/1
+Holdtime: 174 sec
+
+Version:
+Manufacturer's Name: Cisco Systems Inc.  Product Name: Cisco Controller  Product Version: 7.6.120.0  RTOS Version: Erro  Bootloader Version: 1.0.16  Build Type: DATA + WPS
+
+Advertisement Version: 2
+Duplex: full
+
+----------------------------------------
+Device ID:{DeviceID*:WLC1}
+System Name:{SystemName:}
+Interface address(es):
+    IPv4 Address: {InterfaceAddress:10.172.84.1}
+Platform: AIR-CT5508-K9, Capabilities: Host 
+Interface: Ethernet100/1/18, Port ID (outgoing port): GigabitEthernet0/0/2
+Holdtime: 137 sec
+
+Version:
+Manufacturer's Name: Cisco Systems Inc.  Product Name: Cisco Controller  Product Version: 7.6.120.0  RTOS Version: Erro  Bootloader Version: 1.0.16  Build Type: DATA + WPS
+
+Advertisement Version: 2
+Duplex: full
