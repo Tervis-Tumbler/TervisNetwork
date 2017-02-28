@@ -1,4 +1,4 @@
-﻿#Requires -Version 5
+﻿#Requires -Version 5 -modules Posh-SSH
 
 filter mixin-SSHSession {
     $_ | Add-Member -MemberType ScriptProperty -Name Index -Value { $this.SessionID }
@@ -17,12 +17,30 @@ function Get-NXOSMacAddressTable {
     Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show mac address-table dynamic" -CommandTemplate $CommandTemplate
 }
 
+function Get-NXOSMacAddressTableByMacAddress {
+    param(
+        $SSHSession,
+        $MacAddressTwoDotFormat
+    )
+    $CommandTemplate = Get-Content $PSScriptRoot\NXOSMacAddressTable.Template | Out-String
+    Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show mac address-table address $MacAddressTwoDotFormat" -CommandTemplate $CommandTemplate
+}
+
+
 function Get-NXOSIPARP {
     param(
         $SSHSession
     )
     $CommandTemplate = Get-Content $PSScriptRoot\NXOSIPARP.Template | Out-String
     Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show ip arp" -CommandTemplate $CommandTemplate
+}
+
+function Get-NXOSVersion {
+    param(
+        $SSHSession
+    )
+    $CommandTemplate = Get-Content $PSScriptRoot\Get-NXOSVersion.Template | Out-String
+    Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show version" -CommandTemplate $CommandTemplate
 }
 
 function Invoke-TervisNetworkSSHCommandWithTemplate {
@@ -42,7 +60,14 @@ function New-TervisNetworkSSHCommandTemplate {
         $FunctionName
     )
     $SSHCommandResults = Invoke-SSHCommand -Command $Command -Index $SSHSession.SessionID
-    $SSHCommandResult.output | Out-File "$PSScriptRoot\$FunctionName.Template" 
+    $SSHCommandResults.output | Out-File "$PSScriptRoot\$FunctionName.Template" 
+}
+
+function Edit-TervisNetworkSSHCommandTemplate {
+    param(
+        $FunctionName
+    )
+    Invoke-Item "$PSScriptRoot\$FunctionName.Template" 
 }
 
 function Invoke-SSHCommandWithTemplate {
