@@ -11,7 +11,7 @@ filter mixin-SSHSession {
 
 function Get-NXOSMacAddressTable {
     param(
-        $SSHSession
+        $SSHSession = (Get-SSHSession)
     )
     $CommandTemplate = Get-Content $PSScriptRoot\NXOSMacAddressTable.Template | Out-String
     Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show mac address-table dynamic" -CommandTemplate $CommandTemplate
@@ -55,7 +55,7 @@ function Invoke-TervisNetworkSSHCommandWithTemplate {
 
 function New-TervisNetworkSSHCommandTemplate {
     param(
-        $SSHSession,
+        $SSHSession = (Get-SSHSession),
         $Command,
         $FunctionName
     )
