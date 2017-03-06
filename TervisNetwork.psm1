@@ -100,3 +100,33 @@ function Get-NXOSInterfaceTransceiver {
     $CommandTemplate = Get-Content $PSScriptRoot\NXOSInterfaceTransceiver.template | Out-String
     Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show interface transceiver" -CommandTemplate $CommandTemplate
 }
+
+function Restart-ConnectedNetworkInterface {
+    # Works only on computers with one connected interface, not tested with
+    # multiple connected NICs
+    param (
+    $ComputerName
+    )
+
+    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
+        
+        $NetworkAdapter = Get-WmiObject Win32_NetworkAdapter |
+            where {$_.NetConnectionStatus -EQ 2}
+
+        sleep 5
+        $NetworkAdapter.Disable()
+
+        $LoopCount = 0
+        while (
+            # Check if adapter is connected
+            ((Get-WmiObject -Class Win32_NetworkAdapter |
+                where {$_.MACAddress -EQ $NetworkAdapter.MACAddress}).NetConnectionStatus -NE 2) `
+            -AND ($LoopCount -LT 3)
+            # Check that we haven't tried 3 times
+        ) {
+            $NetworkAdapter.Enable()
+            sleep -Seconds 10
+            $LoopCount ++
+        }
+    } -ErrorAction SilentlyContinue
+}
