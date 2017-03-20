@@ -130,3 +130,13 @@ function Restart-ConnectedNetworkInterface {
         }
     } -ErrorAction SilentlyContinue
 }
+
+function Get-NotIPV6Address {
+    param (
+        [Parameter(ValueFromPipeline)]$IPAddress
+    )
+    process {
+        $IPAddress |
+        where { $_ -NotMatch ":" } 
+    }
+}
