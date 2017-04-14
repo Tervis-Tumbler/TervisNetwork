@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5 -modules Posh-SSH
 
 function Install-TervisNetwork {
-    Install-Module -Name Posh-SSH
+    Install-Module -Name Posh-SSH -Scope CurrentUser
 }
 
 filter mixin-SSHSession {
