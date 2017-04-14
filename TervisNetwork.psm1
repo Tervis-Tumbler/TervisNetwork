@@ -1,5 +1,9 @@
 ﻿#Requires -Version 5 -modules Posh-SSH
 
+function Install-TervisNetwork {
+    Install-Module -Name Posh-SSH
+}
+
 filter mixin-SSHSession {
     $_ | Add-Member -MemberType ScriptProperty -Name Index -Value { $this.SessionID }
 }
