@@ -144,3 +144,14 @@ function Get-NotIPV6Address {
         where { $_ -NotMatch ":" } 
     }
 }
+
+function Convert-SubnetMaskToCidr {
+    param (
+        [Parameter(ValueFromPipeline)]$SubnetMask
+    )
+    Process {
+        $Bits = ""
+        $SubnetMask.split(".") | ForEach-Object {$Bits=$Bits + $([convert]::toString($_,2).padleft(8,"0"))}
+        $Bits.indexOf("0")
+    }
+}
