@@ -155,3 +155,16 @@ function Convert-SubnetMaskToCidr {
         $Bits.indexOf("0")
     }
 }
+
+function New-TervisNicTeam {
+    param (
+        [Parameter(ValueFromPipelineByPropertyName)]$ComputerName
+    )
+    $CimSession = New-CimSession -ComputerName $ComputerName
+    if (-NOT (Get-NetLbfoTeam -CimSession $CimSession)) {
+        $NICs = Get-NetAdapter -CimSession $CimSession | where Status -eq "Up" | Select -ExpandProperty Name
+        if (($NICs).Count -gt 1) {
+            New-NetLbfoTeam -CimSession $CimSession -Name "Team 1" -TeamMembers $NICs
+        }
+    }
+}
