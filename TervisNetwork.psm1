@@ -168,3 +168,19 @@ function New-TervisNicTeam {
         }
     }
 }
+
+function Get-NetAdapterWithSpeedInMbps {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ComputerName
+    ) 
+    process {   
+        $WMIResult = Get-WmiObject -Class Win32_NetworkAdapter -ComputerName $ComputerName | 
+            where Speed -NE $null | 
+            Add-Member -MemberType ScriptProperty -Value {($this.Speed)/1000000} -Name SpeedMbps -PassThru | 
+            select Name,SpeedMbps
+        [PSCustomObject][Ordered]@{
+            ComputerName = $ComputerName
+            NetworkSpeed = $WMIResult
+        }
+    }
+}
