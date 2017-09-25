@@ -4,7 +4,7 @@ function Install-TervisNetwork {
     Install-Module -Name Posh-SSH -Scope CurrentUser
 }
 
-filter mixin-SSHSession {
+filter Add-SSHSessionCustomProperty {
     $_ | Add-Member -MemberType ScriptProperty -Name Index -Value { $this.SessionID }
 }
 
@@ -51,42 +51,29 @@ function Invoke-TervisNetworkSSHCommandWithTemplate {
     param(
         $SSHSession,
         $Command,
-        $FunctionName = (Get-Variable MyInvocation -Scope 1).Value.MyCommand.Name
+        $FunctionName = (Get-Variable MyInvocation -Scope 1).Value.MyCommand.Name,
+        [ValidateSet("String","Regex")]$TemplateType = "String"
     )
-    $CommandTemplate = Get-Content "$PSScriptRoot\$FunctionName.Template" | Out-String
-    Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command "show ip arp" -CommandTemplate $CommandTemplate
+    $CommandTemplate = Get-Content "$PSScriptRoot\$FunctionName.$($TemplateType)Template" | Out-String
+    Invoke-SSHCommandWithTemplate -SSHSession $SSHSession -Command $Command -CommandTemplate $CommandTemplate
 }
 
 function New-TervisNetworkSSHCommandTemplate {
     param(
         $SSHSession = (Get-SSHSession),
         $Command,
-        $FunctionName
+        $FunctionName,
+        [ValidateSet("String","Regex")]$TemplateType = "String"
     )
-    $SSHCommandResults = Invoke-SSHCommand -Command $Command -Index $SSHSession.SessionID
-    $SSHCommandResults.output | Out-File "$PSScriptRoot\$FunctionName.Template" 
+    New-SSHCommandTemplate -SSHSession $SSHSession -Command $Command -ModuleName TervisNetwork -TemplateType $TemplateType
 }
 
 function Edit-TervisNetworkSSHCommandTemplate {
     param(
-        $FunctionName
-    )
-    Invoke-Item "$PSScriptRoot\$FunctionName.Template" 
-}
-
-function Invoke-SSHCommandWithTemplate {
-    param(
-        $SSHSession,
         $Command,
-        $CommandTemplate
+        [ValidateSet("String","Regex")]$TemplateType = "String"
     )
-    $SSHCommandResults = Invoke-SSHCommand -Command $Command -Index $SSHSession.SessionID
-    ForEach ($SSHCommandResult in $SSHCommandResults) {
-        $Objects = $SSHCommandResult.output | ConvertFrom-String -TemplateContent $CommandTemplate
-        $Objects | Add-Member -MemberType NoteProperty -Name Host -Value $SSHCommandResult.Host
-        $Results += $Objects
-    }
-    $Results
+    Edit-SSHCommandTemplate -Command $Command -ModuleName TervisNetwork -TemplateType $TemplateType
 }
 
 function Get-NXOSCDPNeighborsDetail {
@@ -183,4 +170,69 @@ function Get-NetAdapterWithSpeedInMbps {
             NetworkSpeed = $WMIResult
         }
     }
+}
+
+function New-NexusVPC {
+    param (
+        $ClientComputerName,
+        $ClientInterfaceNumber,
+        $VPCPortChannelNumber,
+        $ChasisNumber,
+        $SlotNumber,
+        $PortNumber
+    )
+@"
+interface port-channel$VPCPortChannelNumber
+description description VPC $VPCPortChannelNumber to $ClientComputerName Eth $ClientInterfaceNumber
+switchport mode trunk
+vpc $VPCPortChannelNumber
+spanning-tree port type edge trunk
+exit
+"@
+
+@"
+interface Ethernet$ChasisNumber/$SlotNumber/$PortNumber
+description $ClientComputerName Eth $ClientInterfaceNumber
+switchport mode trunk
+channel-group $VPCPortChannelNumber mode active
+"@
+
+
+}
+
+function Invoke-EdgeRouterProvision {
+    $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ubnt, (
+        "ubnt" | ConvertTo-SecureString -AsPlainText -Force
+    )
+    
+    Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
+    $SSHSession = New-SSHSession -ComputerName 192.168.1.1 -Credential $Credential -AcceptKey
+    Invoke-SSHCommand -Command "hostname" -SessionId 0
+    Invoke-SSHCommand -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -SessionId 0
+
+}
+
+function Get-EdgeRouterVersion {
+New-SSHCommandTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -ModuleName TervisNetwork -TemplateType Regex
+Edit-SSHCommandTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -ModuleName TervisNetwork -TemplateType Regex
+Invoke-SSHCommandWithTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -ModuleName TervisNetwork -TemplateType Regex -SSHSession $SSHSession
+
+Invoke-TervisNetworkSSHCommandWithTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -FunctionName "Get-EdgeRouterVersion" $SSHSession
+}
+
+function Invoke-EdgeRouterSSHCommand {
+    param (
+        $Command,
+        [ValidateSet("FlashExtract","Regex")]$TemplateType = "FlashExtract"
+    )
+    Invoke-SSHCommandWithTemplate -Command $Command -ModuleName TervisNetwork -TemplateType $TemplateType
+    Invoke-SSHCommand -Command $Command -SessionId 0 | select -ExpandProperty output
+}
+
+function Invoke-EdgeRouterOperationalCommand {
+    param (
+        $OperationalCommand
+    )
+    $Command = "/opt/vyatta/bin/vyatta-op-cmd-wrapper" + $OperationalCommand
+    Invoke-EdgeRouterSSHCommand -Command $Command -SessionId 0 | select -ExpandProperty output
 }
