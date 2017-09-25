@@ -213,20 +213,23 @@ function Invoke-EdgeRouterProvision {
 }
 
 function Get-EdgeRouterVersion {
-New-SSHCommandTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -ModuleName TervisNetwork -TemplateType Regex
-Edit-SSHCommandTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -ModuleName TervisNetwork -TemplateType Regex
-Invoke-SSHCommandWithTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -ModuleName TervisNetwork -TemplateType Regex -SSHSession $SSHSession
-
-Invoke-TervisNetworkSSHCommandWithTemplate -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -FunctionName "Get-EdgeRouterVersion" $SSHSession
+    Invoke-EdgeRouterSSHCommand -Command "show version" -CommandType Operational -TemplateType Regex -SSHSession $SSHSession
 }
 
 function Invoke-EdgeRouterSSHCommand {
     param (
         $Command,
-        [ValidateSet("FlashExtract","Regex")]$TemplateType = "FlashExtract"
+        [ValidateSet("Operational")]$CommandType,
+        [ValidateSet("FlashExtract","Regex")]$TemplateType = "FlashExtract",
+        $SSHSession
     )
-    Invoke-SSHCommandWithTemplate -Command $Command -ModuleName TervisNetwork -TemplateType $TemplateType
-    Invoke-SSHCommand -Command $Command -SessionId 0 | select -ExpandProperty output
+    $CommandToExecute = if ($CommandType -eq "Operational") { 
+        "/opt/vyatta/bin/vyatta-op-cmd-wrapper " + $Command
+    } else {
+        $Command
+    }
+
+    Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
 }
 
 function Invoke-EdgeRouterOperationalCommand {
