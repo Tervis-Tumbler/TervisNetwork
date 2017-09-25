@@ -1,5 +1,8 @@
 ﻿#Requires -Version 5 -modules Posh-SSH
 
+$ModulePath = (Get-Module -ListAvailable TervisNetwork).ModuleBase
+. $ModulePath\NetworkNodeDefinition.ps1
+
 function Install-TervisNetwork {
     Install-Module -Name Posh-SSH -Scope CurrentUser
 }
