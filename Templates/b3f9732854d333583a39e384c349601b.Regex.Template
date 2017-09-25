@@ -1,0 +1,7 @@
+Version:      v(?<Version>[^\r\n]*)
+Build ID:     (?<BuildID>[^\r\n]*)
+Build on:     (?<BuildDateTime>[^\r\n]*)
+Copyright:    [^\r\n]*
+HW model:     (?<HardwareModel>[^\r\n]*)
+HW S\/N:       (?<HardwareSerialNumber>[^\r\n]*)
+Uptime:       (?<Uptime>[^\r\n]*)
