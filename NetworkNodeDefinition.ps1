@@ -16,12 +16,12 @@
     }
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
-        NextHop = "172.16.0.2"
+        NextHopk = "172.16.0.2"
     }
 },
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-EdgeRouter02"
-    HardwareSerialNumber = ""
+    HardwareSerialNumber = "F09FC2DF02B2"
     OperatingSystemName = "EdgeOS"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth1"

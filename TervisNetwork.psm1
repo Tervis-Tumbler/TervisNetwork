@@ -230,7 +230,7 @@ function Set-EdgeOSSystemHostName {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ComputerName
     )
     process {
-        Invoke-EdgeOSSSHConfigureModeCommand -Command "set system host-name $ComputerName" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommandWrapper -Command "set system host-name $ComputerName" -SSHSession $SSHSession
     }
 }
 
@@ -303,6 +303,12 @@ function Invoke-EdgeOSSSHConfigureModeCommand {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
     )
     process {
+        $ScriptNeeded = @"
+ubnt@testing:/config/scripts$ cat executecommand.sh
+#!/bin/vbash
+source /opt/vyatta/etc/functions/script-template
+eval `$1
+"@
         $CommandToExecute = @"
 /config/scripts/executecommand.sh "configure; $Command; commit"
 "@    
@@ -432,13 +438,14 @@ function Invoke-NetworkNodeProvision {
     param (
         $HardwareSerialNumber
     )
+    Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
     $NetworkNode = Get-NetworkNode -HardwareSerialNumber $HardwareSerialNumber
     if ($NetworkNode.OperatingSystemName -eq "EdgeOS") {
         $NetworkNode | Set-EdgeOSSystemHostName
-        $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"
-        $NetworkNode | Invoke-EdgeOSSSHSaveCommand
+        $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
         $NetWorkNode | Invoke-EdgeOSInterfaceProvision
         $NetWorkNode.StaticRoute | Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
+        $NetworkNode | Invoke-EdgeOSSSHSaveCommand
     }
 
 }
