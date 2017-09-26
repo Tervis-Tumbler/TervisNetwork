@@ -1,10 +1,17 @@
 ﻿$NetworkNodeDefinition = [PSCustomObject][Ordered]@{
-    Name = "INF-EdgeRouter01"
+    ComputerName = "INF-EdgeRouter01"
     HardwareSerialNumber = "F09FC2DF00D2"
-    OperatingSystem = "EdgeOS"
+    OperatingSystemName = "EdgeOS"
+    ManagementIPAddress = "192.168.1.1"
+
 },
 [PSCustomObject][Ordered]@{
-    Name = "INF-EdgeRouter02"
+    ComputerName = "INF-EdgeRouter02"
     HardwareSerialNumber = ""
-    OperatingSystem = "EdgeOS"
+    OperatingSystemName = "EdgeOS"
+}
+
+$NetworkNodeOperatingSystemTemplate = [PSCustomObject][Ordered]@{
+    Name = "EdgeOS"
+    DefaultCredential = 5002    
 }

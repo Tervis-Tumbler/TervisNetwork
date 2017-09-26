@@ -203,7 +203,7 @@ channel-group $VPCPortChannelNumber mode active
 
 }
 
-function Invoke-EdgeRouterProvision {
+function Invoke-EdgeOSProvision {
     $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ubnt, (
         "ubnt" | ConvertTo-SecureString -AsPlainText -Force
     )
@@ -215,30 +215,188 @@ function Invoke-EdgeRouterProvision {
 
 }
 
-function Get-EdgeRouterVersion {
-    Invoke-EdgeRouterSSHCommand -Command "show version" -CommandType Operational -TemplateType Regex -SSHSession $SSHSession
+function Get-EdgeOSVersion {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        Invoke-EdgeOSSSHCommandWithTemplate -Command "show version" -CommandType Operational -TemplateType Regex -SSHSession $SSHSession
+    }
 }
 
-function Invoke-EdgeRouterSSHCommand {
+function Set-EdgeOSSystemHostName {
     param (
-        $Command,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ComputerName
+    )
+    process {
+        Invoke-EdgeOSSSHSetCommand -Command "set system host-name $ComputerName" -SSHSession $SSHSession
+    }
+}
+
+function Set-EdgeOSSystemTimeZone {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$TimeZone
+    )
+    process {
+        Invoke-EdgeOSSSHSetCommand -Command "set system time-zone $TimeZone" -SSHSession $SSHSession
+    }
+}
+
+function Set-EdgeOSInterfacesEthernetAddress {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory)]$Interface,
+        [Parameter(Mandatory)]$Address
+    )
+    process {
+        Invoke-EdgeOSSSHSetCommand -Command "set interfaces ethernet $Interface address $Address" -SSHSession $SSHSession
+    }
+}
+
+function Invoke-EdgeOSSSHSetCommand {
+    param (
+        [Parameter(Mandatory)]$Command,
+        [ValidateSet("Operational")]$CommandType,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        $CommandToExecute = @"
+session_env=`$(cli-shell-api getSessionEnv `$PPID)
+eval `$session_env
+cli-shell-api setupSession
+/opt/vyatta/sbin/my_$Command
+/opt/vyatta/sbin/my_commit
+cli-shell-api teardownSession
+"@ -split "`r`n" -join ";"
+    
+        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+    }
+}
+
+
+function Invoke-EdgeOSSSHSaveCommand {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        $CommandToExecute = @"
+session_env=`$(cli-shell-api getSessionEnv `$PPID)
+eval `$session_env
+cli-shell-api setupSession
+/opt/vyatta/sbin/vyatta-save-config.pl
+cli-shell-api teardownSession
+"@ -split "`r`n" -join ";"
+    
+        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+    }
+}
+
+function Invoke-EdgeOSSSHCommandWithTemplate {
+    param (
+        [Parameter(Mandatory)]$Command,
         [ValidateSet("Operational")]$CommandType,
         [ValidateSet("FlashExtract","Regex")]$TemplateType = "FlashExtract",
-        $SSHSession
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
     )
-    $CommandToExecute = if ($CommandType -eq "Operational") { 
-        "/opt/vyatta/bin/vyatta-op-cmd-wrapper " + $Command
-    } else {
-        $Command
-    }
+    process {
+        $CommandToExecute = if ($CommandType -eq "Operational") { 
+            "/opt/vyatta/bin/vyatta-op-cmd-wrapper " + $Command
+        } else {
+            $Command
+        }
 
-    Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
+        Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
+    }
 }
 
-function Invoke-EdgeRouterOperationalCommand {
+
+function Invoke-EdgeOSSSHCommand {
     param (
-        $OperationalCommand
+        [Parameter(Mandatory)]$Command,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
     )
-    $Command = "/opt/vyatta/bin/vyatta-op-cmd-wrapper" + $OperationalCommand
-    Invoke-EdgeRouterSSHCommand -Command $Command -SessionId 0 | select -ExpandProperty output
+    process {
+        Invoke-SSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+    }
+}
+
+function Get-NetworkNodeDefinition {
+    param (
+        $HardwareSerialNumber
+    )
+    $NetworkNodeDefinition |
+    where HardwareSerialNumber -eq $HardwareSerialNumber
+}
+
+function Get-NetworkNodeOperatingSystemTemplate {
+    param (
+        $Name
+    )
+    $NetworkNodeOperatingSystemTemplate |
+    Where Name -EQ $Name |
+    Add-NetworkNodeOperatingSystemTemplateCustomProperites
+}
+
+function Add-NetworkNodeOperatingSystemTemplateCustomProperites {
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$OperatingSystemTemplate
+    )
+    process {
+        $OperatingSystemTemplate |
+        Add-Member -MemberType ScriptProperty -Name Credential -Force -Value {
+            Get-PasswordstateCredential -PasswordID $this.DefaultCredential
+        } -PassThru
+    }
+}
+
+function Get-NetworkNode {
+    param (
+        $HardwareSerialNumber
+    )
+    $NetworkNode = Get-NetworkNodeDefinition -HardwareSerialNumber $HardwareSerialNumber
+    $NetworkNode | 
+    Add-NetworkNodeCustomProperites
+}
+
+function Add-NetworkNodeCustomProperites {
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$Node
+    )
+    process {
+        $Node | 
+        Add-Member -MemberType ScriptProperty -Name OperatingSystemTemplate -Force -Value {
+            Get-NetworkNodeOperatingSystemTemplate -Name $This.OperatingSystemName
+        } -PassThru |
+        Add-Member -MemberType ScriptProperty -Name SSHSession -Force -Value {
+            $SSHSession = Get-SSHSession -ComputerName $This.ManagementIPAddress
+            if ($SSHSession -and $SSHSession.Connected -eq $true) {
+                $SSHSession
+            } else {
+                if ($SSHSession) { $SSHSession | Remove-SSHSession }
+                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.OperatingSystemTemplate.Credential
+            }
+        } -PassThru 
+    }
+}
+
+function Invoke-NetworkNodeProvision {
+    param (
+        $HardwareSerialNumber
+    )
+    $NetworkNode = Get-NetworkNode -HardwareSerialNumber $HardwareSerialNumber
+    if ($NetworkNode.OperatingSystemName -eq "EdgeOS") {
+        $NetworkNode | Set-EdgeOSSystemHostName
+        $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"
+        $NetworkNode | Set-EdgeOSInterfacesEthernetAddress -Interface eth4 -Address dhcp
+        $NetworkNode | Invoke-EdgeOSSSHSaveCommand
+        ./config/scripts/executecommand.sh
+    }
+
+@"
+#!/bin/vbash
+source /opt/vyatta/etc/functions/script-template
+eval `$1
+"@
 }
