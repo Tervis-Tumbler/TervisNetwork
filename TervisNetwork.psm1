@@ -230,7 +230,7 @@ function Set-EdgeOSSystemHostName {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ComputerName
     )
     process {
-        Invoke-EdgeOSSSHSetCommand -Command "set system host-name $ComputerName" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set system host-name $ComputerName" -SSHSession $SSHSession
     }
 }
 
@@ -247,18 +247,40 @@ function Set-EdgeOSSystemTimeZone {
 function Set-EdgeOSInterfacesEthernetAddress {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
-        [Parameter(Mandatory)]$Interface,
-        [Parameter(Mandatory)]$Address
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address
     )
     process {
-        Invoke-EdgeOSSSHSetCommand -Command "set interfaces ethernet $Interface address $Address" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHSetCommand -Command "set interfaces ethernet $Name address $Address" -SSHSession $SSHSession
+    }
+}
+
+function Set-EdgeOSInterfacesEthernetVIFAddress {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Vlan,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address
+    )
+    process {
+        Invoke-EdgeOSSSHSetCommand -Command "set interfaces ethernet $Name vif $Vlan address $Address" -SSHSession $SSHSession
+    }
+}
+
+function Set-EdgeOSProtocolsStaticRoute {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop        
+    )
+    process {
+        Invoke-EdgeOSSSHConfigureModeCommandWrapper -Command "set protocols static route $Address next-hop $NextHop" -SSHSession $SSHSession
     }
 }
 
 function Invoke-EdgeOSSSHSetCommand {
     param (
         [Parameter(Mandatory)]$Command,
-        [ValidateSet("Operational")]$CommandType,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
     )
     process {
@@ -275,6 +297,31 @@ cli-shell-api teardownSession
     }
 }
 
+function Invoke-EdgeOSSSHConfigureModeCommand {
+    param (
+        [Parameter(Mandatory)]$Command,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        $CommandToExecute = @"
+/config/scripts/executecommand.sh "configure; $Command; commit"
+"@    
+        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+    }
+}
+
+function Invoke-EdgeOSSSHConfigureModeCommandWrapper {
+    param (
+        [Parameter(Mandatory)]$Command,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {    
+        $CommandToExecute = @"
+/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper begin; /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper $Command; /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit; /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper end;
+"@    
+        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+    }
+}
 
 function Invoke-EdgeOSSSHSaveCommand {
     param (
@@ -389,14 +436,27 @@ function Invoke-NetworkNodeProvision {
     if ($NetworkNode.OperatingSystemName -eq "EdgeOS") {
         $NetworkNode | Set-EdgeOSSystemHostName
         $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"
-        $NetworkNode | Set-EdgeOSInterfacesEthernetAddress -Interface eth4 -Address dhcp
         $NetworkNode | Invoke-EdgeOSSSHSaveCommand
-        ./config/scripts/executecommand.sh
+        $NetWorkNode | Invoke-EdgeOSInterfaceProvision
+        $NetWorkNode.StaticRoute | Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
     }
 
-@"
-#!/bin/vbash
-source /opt/vyatta/etc/functions/script-template
-eval `$1
-"@
+}
+
+function Invoke-EdgeOSInterfaceProvision {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceDefinition
+    )
+    process {
+        $InterfaceDefinition |
+        Where {$_.Address} |
+        Set-EdgeOSInterfacesEthernetAddress -SSHSession $SSHSession
+
+        $InterfaceDefinition |
+        Where {$_.VIF} | % {
+            $_.VIF |
+            Set-EdgeOSInterfacesEthernetVIFAddress -Name $_.Name -SSHSession $SSHSession
+        }
+    }
 }
