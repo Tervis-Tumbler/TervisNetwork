@@ -318,13 +318,19 @@ eval `$1
 
 function Invoke-EdgeOSSSHConfigureModeCommandWrapper {
     param (
-        [Parameter(Mandatory)]$Command,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+        [Parameter(Mandatory,ValueFromPipeline)]$Command,
+        [Parameter(Mandatory)]$SSHSession
     )
+    begin {
+        [Array]$CommandArray += "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper begin"
+    }
     process {    
-        $CommandToExecute = @"
-/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper begin; /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper $Command; /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit; /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper end;
-"@    
+        $CommandArray += "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper $Command"
+    }
+    end {
+        $CommandArray += "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit"
+        $CommandArray += "/opt/vyatta/sbin/vyatta-cfg-cmd-wrapper end"
+        $CommandToExecute = $CommandArray -join ";"
         Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
     }
 }
@@ -450,6 +456,11 @@ function Invoke-NetworkNodeProvision {
         Select -ExpandProperty StaticRoute |
         Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
 
+        
+        $NetworkNode | 
+        where {$_.TunnelMemberDefinition} | 
+        Invoke-EdgeOSTunnelProvision
+
         $NetworkNode | Invoke-EdgeOSSSHSaveCommand
     }
 }
@@ -478,91 +489,103 @@ function Invoke-LabHardwareProvision {
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF02B2
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF00E4
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF0294
-
-    $Router1Parameters = @{
-        WANIPLocal = "172.16.1.1"
-        WANIPRemote = "172.16.1.2"
-        VTIIPLocal = "192.168.0.1"
-        VTIIPLocalPrefixBits = 30
-        VTIIPRemote = "192.168.0.2"
-        PreSharedSecret = "vyos"
-    }
-
-    $Router2Parameters = @{
-        WANIPLocal = "172.16.1.2"
-        WANIPRemote = "172.16.1.1"
-        VTIIPLocal = "192.168.0.2"
-        VTIIPLocalPrefixBits = 30
-        VTIIPRemote = "192.168.0.1"
-        PreSharedSecret = "vyos"
-    }
-
-    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router1Parameters
-    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router2Parameters
-
 }
 
-function New-VyOSSiteToSiteWANVPN {
+function Get-TervisNetworkTunnelDefiniton {
     param (
-        $WANIPLocal,
-        $WANIPRemote,
-        $VTIIPLocal,
-        $VTIIPLocalPrefixBits,
-        $VTIIPRemote,        
-        $PreSharedSecret,
-        $Phase1DHGroup,
-        $Phase1Encryption,
-        $Phase1Hash,
-        $Phase2Encryption,
-        $Phase2Hash
+        $Name
+    )
+    $TunnelDefinition |
+    where Name -EQ $Name
+}
+
+function Invoke-EdgeOSTunnelProvision {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$TunnelMemberDefinition,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceDefinition
+    )
+    process {
+        $TunnelDefinition = Get-TervisNetworkTunnelDefiniton -Name $TunnelMemberDefinition.TunnelName
+        
+        $Commands = $TunnelDefinition |
+        New-VyOSSiteToSiteWANVPNCommandsFromTunnelDefinition -TunnelSide $TunnelMemberDefinition.TunnelSide -InterfaceDefinition $InterfaceDefinition
+
+        $Commands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $SSHSession
+    }
+}
+
+function New-VyOSSiteToSiteWANVPNCommandsFromTunnelDefinition {
+    param (
+        [ValidateSet("Left","Right")][Parameter(Mandatory)]$TunnelSide,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$LeftPeerIP,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$RightPeerIP,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$LeftVTIIP,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$RightVTIIP,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$VTIIPPrefixBits,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PreSharedSecret,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Phase1DHGroup,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Phase1Encryption,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Phase1Hash,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Phase2Encryption,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Phase2Hash,
+        [Parameter(Mandatory)]$InterfaceDefinition
+    )
+
+    $VPNParameters = if ($TunnelSide -eq "Left") {
+        @{
+            WANIPLocal = $LeftPeerIP
+            WANIPRemote = $RightPeerIP
+            VTIIPLocal = $LeftVTIIP
+            VTIIPRemote = $RightVTIIP
+        }
+    } elseif ($TunnelSide -eq "Right") {
+        @{
+            WANIPLocal = $RightPeerIP
+            WANIPRemote = $LeftPeerIP
+            VTIIPLocal = $RightVTIIP
+            VTIIPRemote = $LeftVTIIP
+        }
+    }
+    
+    $IpsecInterface = $InterfaceDefinition |
+    Where-Object Address -Match $VPNParameters.WANIPLocal |
+    Select-Object -ExpandProperty Name
+
+    New-VyOSSiteToSiteWANVPNCommands @VPNParameters -Phase1DHGroup $Phase1DHGroup -Phase1Encryption $Phase1Encryption -Phase1Hash $Phase1Hash -Phase2Encryption $Phase2Encryption -Phase2Hash $Phase2Hash -VTIIPLocalPrefixBits $VTIIPPrefixBits -PreSharedSecret $PreSharedSecret -IpsecInterface $IpsecInterface
+}
+
+function New-VyOSSiteToSiteWANVPNCommands {
+    param (
+        [Parameter(Mandatory)]$WANIPLocal,
+        [Parameter(Mandatory)]$WANIPRemote,
+        [Parameter(Mandatory)]$VTIIPLocal,
+        [Parameter(Mandatory)]$VTIIPLocalPrefixBits,
+        [Parameter(Mandatory)]$VTIIPRemote,
+        [Parameter(Mandatory)]$PreSharedSecret,
+        [Parameter(Mandatory)]$Phase1DHGroup,
+        [Parameter(Mandatory)]$Phase1Encryption,
+        [Parameter(Mandatory)]$Phase1Hash,
+        [Parameter(Mandatory)]$Phase2Encryption,
+        [Parameter(Mandatory)]$Phase2Hash,
+        [Parameter(Mandatory)]$IpsecInterface
     )
     
 @"
 set interfaces vti vti0 address $VTIIPLocal/$VTIIPLocalPrefixBits
-set vpn ipsec ike-group ikegroup0 proposal 1 dh-group $DHGroup
+set vpn ipsec ipsec-interfaces interface $IpsecInterface
+set vpn ipsec ike-group ikegroup0 proposal 1 dh-group $Phase1DHGroup
 set vpn ipsec ike-group ikegroup0 proposal 1 encryption $Phase1Encryption
 set vpn ipsec ike-group ikegroup0 proposal 1 hash $Phase1Hash
-set vpn ipsec eps-group espgroup0 proposal 1 encryption $Phase2Encryption
-set vpn ipsec eps-group espgroup0 proposal 1 hash $Phase2Hash
-set vpn ipsec ipsec-interfaces interface vti0
+set vpn ipsec esp-group espgroup0 proposal 1 encryption $Phase2Encryption
+set vpn ipsec esp-group espgroup0 proposal 1 hash $Phase2Hash
+set vpn ipsec site-to-site peer $WANIPRemote local-address $WANIPLocal
+set vpn ipsec site-to-site peer $WANIPRemote ike-group ikegroup0
+set vpn ipsec site-to-site peer $WANIPRemote vti esp-group espgroup0
 set vpn ipsec site-to-site peer $WANIPRemote authentication mode pre-shared-secret
 set vpn ipsec site-to-site peer $WANIPRemote authentication pre-shared-secret $PreSharedSecret
-set vpn ipsec site-to-site peer $WANIPRemote connection type initiate
-set vpn ipsec site-to-site peer $WANIPRemote ike-group ikegroup0
-set vpn ipsec site-to-site peer $WANIPRemote local-address $WANIPLocal
-set vpn ipsec site-to-site peer $WANIPRemote vti bind vit0
-set vpn ipsec site-to-site peer $WANIPRemote vti esp-group espgroup0
+set vpn ipsec site-to-site peer $WANIPRemote connection-type initiate
+set vpn ipsec site-to-site peer $WANIPRemote vti bind vti0
 "@
 }
-
-function New-VyOSTestSiteToSiteWANVPNInLab {
-    param (
-        $Phase1DHGroup,
-        $Phase1Encryption,
-        $Phase1Hash,
-        $Phase2Encryption,
-        $Phase2Hash
-    )
-
-    $Router1Parameters = @{
-        WANIPLocal = 172.16.1.1
-        WANIPRemote = 172.16.1.2
-        VTIIPLocal = 192.168.0.1
-        VTIIPLocalPrefixBits = 30
-        VTIIPRemote = 192.168.0.2
-        PreSharedSecret = "vyos"
-    }
-
-    $Router2Parameters = @{
-        WANIPLocal = 172.16.1.2
-        WANIPRemote = 172.16.1.1
-        VTIIPLocal = 192.168.0.2
-        VTIIPLocalPrefixBits = 30
-        VTIIPRemote = 192.168.0.1
-        PreSharedSecret = "vyos"
-    }
-
-    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router1Parameters
-    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router2Parameters
-}
-

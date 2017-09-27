@@ -109,4 +109,9 @@ $TunnelDefinition = [PSCustomObject][Ordered]@{
     RightVTIIP = "192.168.0.2"
     VTIIPPrefixBits = 30    
     PreSharedSecret = "vyos"
+    Phase1DHGroup = 19
+    Phase1Encryption = "aes128"
+    Phase1Hash = "sha256"
+    Phase2Encryption = "aes128"
+    Phase2Hash = "sha1"
 }
