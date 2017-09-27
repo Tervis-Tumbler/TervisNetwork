@@ -433,7 +433,7 @@ function Add-NetworkNodeCustomProperites {
             if ($SSHSession -and $SSHSession.Connected -eq $true) {
                 $SSHSession
             } else {
-                if ($SSHSession) { $SSHSession | Remove-SSHSession }
+                if ($SSHSession) { $SSHSession | Remove-SSHSession | Out-Null }
                 New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.OperatingSystemTemplate.Credential
             }
         } -PassThru 
