@@ -444,10 +444,14 @@ function Invoke-NetworkNodeProvision {
         $NetworkNode | Set-EdgeOSSystemHostName
         $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
         $NetWorkNode | Invoke-EdgeOSInterfaceProvision
-        $NetWorkNode.StaticRoute | Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
+        
+        $NetWorkNode | 
+        where {$_.StaticRoute} | 
+        Select -ExpandProperty StaticRoute |
+        Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
+
         $NetworkNode | Invoke-EdgeOSSSHSaveCommand
     }
-
 }
 
 function Invoke-EdgeOSInterfaceProvision {
@@ -467,3 +471,98 @@ function Invoke-EdgeOSInterfaceProvision {
         }
     }
 }
+
+function Invoke-LabHardwareProvision {
+    ipmo -Force tervisnetwork
+    Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF00D2
+    Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF02B2
+    Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF00E4
+    Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF0294
+
+    $Router1Parameters = @{
+        WANIPLocal = "172.16.1.1"
+        WANIPRemote = "172.16.1.2"
+        VTIIPLocal = "192.168.0.1"
+        VTIIPLocalPrefixBits = 30
+        VTIIPRemote = "192.168.0.2"
+        PreSharedSecret = "vyos"
+    }
+
+    $Router2Parameters = @{
+        WANIPLocal = "172.16.1.2"
+        WANIPRemote = "172.16.1.1"
+        VTIIPLocal = "192.168.0.2"
+        VTIIPLocalPrefixBits = 30
+        VTIIPRemote = "192.168.0.1"
+        PreSharedSecret = "vyos"
+    }
+
+    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router1Parameters
+    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router2Parameters
+
+}
+
+function New-VyOSSiteToSiteWANVPN {
+    param (
+        $WANIPLocal,
+        $WANIPRemote,
+        $VTIIPLocal,
+        $VTIIPLocalPrefixBits,
+        $VTIIPRemote,        
+        $PreSharedSecret,
+        $Phase1DHGroup,
+        $Phase1Encryption,
+        $Phase1Hash,
+        $Phase2Encryption,
+        $Phase2Hash
+    )
+    
+@"
+set interfaces vti vti0 address $VTIIPLocal/$VTIIPLocalPrefixBits
+set vpn ipsec ike-group ikegroup0 proposal 1 dh-group $DHGroup
+set vpn ipsec ike-group ikegroup0 proposal 1 encryption $Phase1Encryption
+set vpn ipsec ike-group ikegroup0 proposal 1 hash $Phase1Hash
+set vpn ipsec eps-group espgroup0 proposal 1 encryption $Phase2Encryption
+set vpn ipsec eps-group espgroup0 proposal 1 hash $Phase2Hash
+set vpn ipsec ipsec-interfaces interface vti0
+set vpn ipsec site-to-site peer $WANIPRemote authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer $WANIPRemote authentication pre-shared-secret $PreSharedSecret
+set vpn ipsec site-to-site peer $WANIPRemote connection type initiate
+set vpn ipsec site-to-site peer $WANIPRemote ike-group ikegroup0
+set vpn ipsec site-to-site peer $WANIPRemote local-address $WANIPLocal
+set vpn ipsec site-to-site peer $WANIPRemote vti bind vit0
+set vpn ipsec site-to-site peer $WANIPRemote vti esp-group espgroup0
+"@
+}
+
+function New-VyOSTestSiteToSiteWANVPNInLab {
+    param (
+        $Phase1DHGroup,
+        $Phase1Encryption,
+        $Phase1Hash,
+        $Phase2Encryption,
+        $Phase2Hash
+    )
+
+    $Router1Parameters = @{
+        WANIPLocal = 172.16.1.1
+        WANIPRemote = 172.16.1.2
+        VTIIPLocal = 192.168.0.1
+        VTIIPLocalPrefixBits = 30
+        VTIIPRemote = 192.168.0.2
+        PreSharedSecret = "vyos"
+    }
+
+    $Router2Parameters = @{
+        WANIPLocal = 172.16.1.2
+        WANIPRemote = 172.16.1.1
+        VTIIPLocal = 192.168.0.2
+        VTIIPLocalPrefixBits = 30
+        VTIIPRemote = 192.168.0.1
+        PreSharedSecret = "vyos"
+    }
+
+    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router1Parameters
+    New-VyOSSiteToSiteWANVPN -Phase1DHGroup 19 -Phase1Encryption aes128 -Phase1Hash sha256 -Phase2Encryption aes128 -Phase2Hash sha256 @Router2Parameters
+}
+
