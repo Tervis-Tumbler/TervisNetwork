@@ -278,6 +278,16 @@ function Set-EdgeOSProtocolsStaticRoute {
     }
 }
 
+function Add-EdgeOSSystemImage {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ImagePath        
+    )
+    process {
+        Invoke-EdgeOSSSHCommandWithTemplate -CommandType Operational -Command "add system image $ImagePath" -SSHSession $SSHSession
+    }
+}
+
 function Invoke-EdgeOSSSHSetCommand {
     param (
         [Parameter(Mandatory)]$Command,
@@ -385,8 +395,11 @@ function Get-NetworkNodeDefinition {
     param (
         $HardwareSerialNumber
     )
-    $NetworkNodeDefinition |
+    $HardwareMapping = $NetworkNodeDefinitionToHardwareMapping | 
     where HardwareSerialNumber -eq $HardwareSerialNumber
+
+    $NetworkNodeDefinition |
+    where ComputerName -eq $HardwareMapping.ComputerName
 }
 
 function Get-NetworkNodeOperatingSystemTemplate {
@@ -434,7 +447,7 @@ function Add-NetworkNodeCustomProperites {
                 $SSHSession
             } else {
                 if ($SSHSession) { $SSHSession | Remove-SSHSession | Out-Null }
-                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.OperatingSystemTemplate.Credential
+                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.OperatingSystemTemplate.Credential -AcceptKey
             }
         } -PassThru 
     }
@@ -457,9 +470,11 @@ function Invoke-NetworkNodeProvision {
         Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
 
         
-        $NetworkNode | 
-        where {$_.TunnelMemberDefinition} | 
-        Invoke-EdgeOSTunnelProvision
+        #$NetworkNode | 
+        #where {$_.TunnelMemberDefinition} | 
+        #Invoke-EdgeOSTunnelProvision
+
+        #Add-EdgeOSSystemImage -ImagePath https://dl.ubnt.com/firmwares/edgemax/v1.9.7/ER-e50.v1.9.7+hotfix.3.5013617.tar
 
         $NetworkNode | Invoke-EdgeOSSSHSaveCommand
     }
@@ -489,6 +504,8 @@ function Invoke-LabHardwareProvision {
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF02B2
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF00E4
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF0294
+    #set protocols static interface-route 172.16.1.0/24 next-hop-interface vti0
+#set protocols static interface-route 172.16.2.0/24 next-hop-interface vti0
 }
 
 function Get-TervisNetworkTunnelDefiniton {
@@ -553,7 +570,8 @@ function New-VyOSSiteToSiteWANVPNCommandsFromTunnelDefinition {
     Where-Object Address -Match $VPNParameters.WANIPLocal |
     Select-Object -ExpandProperty Name
 
-    New-VyOSSiteToSiteWANVPNCommands @VPNParameters -Phase1DHGroup $Phase1DHGroup -Phase1Encryption $Phase1Encryption -Phase1Hash $Phase1Hash -Phase2Encryption $Phase2Encryption -Phase2Hash $Phase2Hash -VTIIPLocalPrefixBits $VTIIPPrefixBits -PreSharedSecret $PreSharedSecret -IpsecInterface $IpsecInterface
+    #New-VyOSSiteToSiteWANVPNCommands @VPNParameters -Phase1DHGroup $Phase1DHGroup -Phase1Encryption $Phase1Encryption -Phase1Hash $Phase1Hash -Phase2Encryption $Phase2Encryption -Phase2Hash $Phase2Hash -VTIIPLocalPrefixBits $VTIIPPrefixBits -PreSharedSecret $PreSharedSecret -IpsecInterface $IpsecInterface
+    New-VyOSSiteToSiteWANVPNCommandsUbiquitiExample @VPNParameters -Phase1DHGroup $Phase1DHGroup -Phase1Encryption $Phase1Encryption -Phase1Hash $Phase1Hash -Phase2Encryption $Phase2Encryption -Phase2Hash $Phase2Hash -VTIIPLocalPrefixBits $VTIIPPrefixBits -PreSharedSecret $PreSharedSecret -IpsecInterface $IpsecInterface
 }
 
 function New-VyOSSiteToSiteWANVPNCommands {
@@ -575,6 +593,7 @@ function New-VyOSSiteToSiteWANVPNCommands {
 @"
 set interfaces vti vti0 address $VTIIPLocal/$VTIIPLocalPrefixBits
 set vpn ipsec ipsec-interfaces interface $IpsecInterface
+set vpn ipsec ike-group ikegroup0 key-exchange ikev2
 set vpn ipsec ike-group ikegroup0 proposal 1 dh-group $Phase1DHGroup
 set vpn ipsec ike-group ikegroup0 proposal 1 encryption $Phase1Encryption
 set vpn ipsec ike-group ikegroup0 proposal 1 hash $Phase1Hash
@@ -587,5 +606,43 @@ set vpn ipsec site-to-site peer $WANIPRemote authentication mode pre-shared-secr
 set vpn ipsec site-to-site peer $WANIPRemote authentication pre-shared-secret $PreSharedSecret
 set vpn ipsec site-to-site peer $WANIPRemote connection-type initiate
 set vpn ipsec site-to-site peer $WANIPRemote vti bind vti0
+"@
+}
+
+function New-VyOSSiteToSiteWANVPNCommandsUbiquitiExample {
+    param (
+        [Parameter(Mandatory)]$WANIPLocal,
+        [Parameter(Mandatory)]$WANIPRemote,
+        [Parameter(Mandatory)]$VTIIPLocal,
+        [Parameter(Mandatory)]$VTIIPLocalPrefixBits,
+        [Parameter(Mandatory)]$VTIIPRemote,
+        [Parameter(Mandatory)]$PreSharedSecret,
+        [Parameter(Mandatory)]$Phase1DHGroup,
+        [Parameter(Mandatory)]$Phase1Encryption,
+        [Parameter(Mandatory)]$Phase1Hash,
+        [Parameter(Mandatory)]$Phase2Encryption,
+        [Parameter(Mandatory)]$Phase2Hash,
+        [Parameter(Mandatory)]$IpsecInterface
+    )
+    
+@"
+set vpn ipsec auto-firewall-nat-exclude enable
+set vpn ipsec esp-group FOO0 lifetime 43200
+set vpn ipsec esp-group FOO0 pfs disable
+set vpn ipsec esp-group FOO0 proposal 1 encryption $Phase2Encryption
+set vpn ipsec esp-group FOO0 proposal 1 hash $Phase2Hash
+set vpn ipsec ike-group FOO0 lifetime 86400
+set vpn ipsec ike-group FOO0 proposal 1 dh-group $Phase1DHGroup
+set vpn ipsec ike-group FOO0 proposal 1 encryption $Phase1Encryption
+set vpn ipsec ike-group FOO0 proposal 1 hash $Phase1Hash
+set vpn ipsec site-to-site peer $WANIPRemote authentication mode pre-shared-secret
+set vpn ipsec site-to-site peer $WANIPRemote authentication pre-shared-secret $PreSharedSecret
+set vpn ipsec site-to-site peer $WANIPRemote description IPsec
+set vpn ipsec site-to-site peer $WANIPRemote ike-group FOO0
+set vpn ipsec site-to-site peer $WANIPRemote local-address $WANIPLocal
+set vpn ipsec site-to-site peer $WANIPRemote vti bind vti0
+set vpn ipsec site-to-site peer $WANIPRemote vti esp-group FOO0
+set interfaces vti vti0 address $VTIIPLocal/$VTIIPLocalPrefixBits
+set protocols static interface-route 172.16.1.0/24 next-hop-interface vti0
 "@
 }
