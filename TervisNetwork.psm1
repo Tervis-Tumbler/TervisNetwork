@@ -7,10 +7,6 @@ function Install-TervisNetwork {
     Install-Module -Name Posh-SSH -Scope CurrentUser
 }
 
-filter Add-SSHSessionCustomProperty {
-    $_ | Add-Member -MemberType ScriptProperty -Name Index -Value { $this.SessionID }
-}
-
 #$SSHSession = New-SSHSession -ComputerName $NXOSSwitches -Credential (get-credential)
 ##Does not work though it probably should
 ##$Sessions | Invoke-SSHCommand -Command "show version"
