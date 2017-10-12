@@ -642,3 +642,9 @@ set interfaces vti vti0 address $VTIIPLocal/$VTIIPLocalPrefixBits
 set protocols static interface-route 172.16.1.0/24 next-hop-interface vti0
 "@
 }
+
+function Invoke-ZeroTierBridgeProvision {
+    Invoke-ApplicationProvision -ApplicationName ZeroTierBridge
+    $Nodes = Get-TervisApplicationNode -ApplicationName ZeroTierBridge -IncludeSSHSession
+    $Nodes | Install-LinuxZeroTierOne
+}
