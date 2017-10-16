@@ -648,3 +648,14 @@ function Invoke-ZeroTierBridgeProvision {
     $Nodes = Get-TervisApplicationNode -ApplicationName ZeroTierBridge -IncludeSSHSession
     $Nodes | Install-LinuxZeroTierOne
 }
+
+function Invoke-UnifiControllerProvision {
+    Invoke-ApplicationProvision -ApplicationName UnifiController
+    $Nodes = Get-TervisApplicationNode -ApplicationName UnifiController -IncludeSSHSession
+#Install Controller service after opening it via rdp the first time
+@"
+cd "%UserProfile%\Ubiquiti UniFi\"
+java -jar lib\ace.jar installsvc
+java -jar lib\ace.jar startsvc
+"@    
+}
