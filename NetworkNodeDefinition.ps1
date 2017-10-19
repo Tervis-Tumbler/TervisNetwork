@@ -257,6 +257,7 @@ set interfaces ethernet eth2 firewall local name WAN_LOCAL
 set interfaces ethernet eth3 description 'Fios150'
 set interfaces ethernet eth3 firewall in name WAN_IN
 set interfaces ethernet eth3 firewall local name WAN_LOCAL
+set interfaces ethernet eth4 description 'Infrastructure'
 set load-balance group G interface eth1
 set load-balance group G interface eth2
 set load-balance group G interface eth3
