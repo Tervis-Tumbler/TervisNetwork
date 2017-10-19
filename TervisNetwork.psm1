@@ -472,6 +472,9 @@ function Invoke-NetworkNodeProvision {
 
         #Add-EdgeOSSystemImage -ImagePath https://dl.ubnt.com/firmwares/edgemax/v1.9.7/ER-e50.v1.9.7+hotfix.3.5013617.tar
 
+        $NetworkNode.AdditionalCommands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $NetworkNode.SSHSession
+
         $NetworkNode | Invoke-EdgeOSSSHSaveCommand
     }
 }
@@ -500,8 +503,10 @@ function Invoke-LabHardwareProvision {
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF02B2
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF00E4
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF0294
-    #set protocols static interface-route 172.16.1.0/24 next-hop-interface vti0
+#set protocols static interface-route 172.16.1.0/24 next-hop-interface vti0
 #set protocols static interface-route 172.16.2.0/24 next-hop-interface vti0
+
+    Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF9F3A
 }
 
 function Get-TervisNetworkTunnelDefiniton {
