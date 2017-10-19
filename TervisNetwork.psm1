@@ -664,3 +664,13 @@ java -jar lib\ace.jar installsvc
 java -jar lib\ace.jar startsvc
 "@    
 }
+
+function Set-ZeroTierInterfaceMetric {
+    param(
+        [parameter(Mandatory)]$Computername
+    )
+    Invoke-Command -ComputerName $Computername -ScriptBlock {
+        $ZTIFIndex = Get-NetAdapter | where interfacedescription -match "ZeroTier" | select ifIndex -ExpandProperty ifIndex
+        set-netipinterface -InterfaceIndex $ZTIFIndex -InterfaceMetric 100
+    }
+}
