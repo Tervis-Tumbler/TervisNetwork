@@ -421,21 +421,30 @@ function Add-NetworkNodeOperatingSystemTemplateCustomProperites {
 
 function Get-NetworkNode {
     param (
-        $HardwareSerialNumber
+        $HardwareSerialNumber,
+        [Switch]$UseDefaultCredential
     )
     $NetworkNode = Get-NetworkNodeDefinition -HardwareSerialNumber $HardwareSerialNumber
     $NetworkNode | 
-    Add-NetworkNodeCustomProperites
+    Add-NetworkNodeCustomProperites -UseDefaultCredential:$UseDefaultCredential
 }
 
 function Add-NetworkNodeCustomProperites {
     param (
-        [Parameter(Mandatory,ValueFromPipeline)]$Node
+        [Parameter(Mandatory,ValueFromPipeline)]$Node,
+        [Switch]$UseDefaultCredential
     )
     process {
         $Node | 
         Add-Member -MemberType ScriptProperty -Name OperatingSystemTemplate -Force -Value {
             Get-NetworkNodeOperatingSystemTemplate -Name $This.OperatingSystemName
+        } -PassThru |
+        Add-Member -MemberType ScriptProperty -Name Credential -Force -Value {
+            if ($UseDefaultCredential) {
+                $This.OperatingSystemTemplate.Credential
+            } else {
+                Get-PasswordstateCredential -PasswordID $This.PasswordID
+            }
         } -PassThru |
         Add-Member -MemberType ScriptProperty -Name SSHSession -Force -Value {
             $SSHSession = Get-SSHSession -ComputerName $This.ManagementIPAddress
@@ -443,7 +452,7 @@ function Add-NetworkNodeCustomProperites {
                 $SSHSession
             } else {
                 if ($SSHSession) { $SSHSession | Remove-SSHSession | Out-Null }
-                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.OperatingSystemTemplate.Credential -AcceptKey
+                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.Credential -AcceptKey
             }
         } -PassThru 
     }
@@ -456,6 +465,7 @@ function Invoke-NetworkNodeProvision {
     Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
     $NetworkNode = Get-NetworkNode -HardwareSerialNumber $HardwareSerialNumber
     if ($NetworkNode.OperatingSystemName -eq "EdgeOS") {
+        #$NetworkNode | Set-EedgeOSUser
         $NetworkNode | Set-EdgeOSSystemHostName
         $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
         $NetWorkNode | Invoke-EdgeOSInterfaceProvision
@@ -663,14 +673,4 @@ cd "%UserProfile%\Ubiquiti UniFi\"
 java -jar lib\ace.jar installsvc
 java -jar lib\ace.jar startsvc
 "@    
-}
-
-function Set-ZeroTierInterfaceMetric {
-    param(
-        [parameter(Mandatory)]$Computername
-    )
-    Invoke-Command -ComputerName $Computername -ScriptBlock {
-        $ZTIFIndex = Get-NetAdapter | where interfacedescription -match "ZeroTier" | select ifIndex -ExpandProperty ifIndex
-        set-netipinterface -InterfaceIndex $ZTIFIndex -InterfaceMetric 100
-    }
 }
