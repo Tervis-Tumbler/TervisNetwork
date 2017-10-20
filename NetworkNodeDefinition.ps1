@@ -285,6 +285,20 @@ set firewall ipv6-receive-redirects disable
 set firewall ipv6-src-route disable
 set firewall ip-src-route disable
 set firewall log-martians disable
+set firewall group network-group LAN_NETS network 10.2.2.0/24
+set firewall group network-group LAN_NETS network 10.4.0.0/16
+set firewall group network-group LAN_NETS network 10.16.0.0/24
+set firewall group network-group LAN_NETS network 10.32.0.0/24
+set firewall group network-group LAN_NETS network 10.40.0.0/24
+set firewall group network-group LAN_NETS network 10.54.0.0/19
+set firewall group network-group LAN_NETS network 10.55.1.0/24
+set firewall group network-group LAN_NETS network 10.64.0.0/16
+set firewall group network-group LAN_NETS network 10.92.2.0/24
+set firewall group network-group LAN_NETS network 10.128.0.0/24
+set firewall group network-group LAN_NETS network 10.128.1.0/32
+set firewall group network-group LAN_NETS network 10.172.0.0/16
+set firewall group network-group LAN_NETS network 10.200.0.0/24
+set firewall group network-group LAN_NETS network 10.200.2.0/24
 set firewall modify balance rule 1 action modify
 set firewall modify balance rule 1 modify lb-group G
 set firewall name WAN_IN default-action drop
