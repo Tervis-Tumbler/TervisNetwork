@@ -189,7 +189,12 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     ComputerName = "INF-ERWAN01"
     OperatingSystemName = "EdgeOS"
     ManagementIPAddress = "192.168.1.1"
+    PasswordID = 5135
     InterfaceDefinition = [PSCustomObject][Ordered]@{
+        Name = "eth0"
+        Address = "10.172.48.148/24"
+    },
+    [PSCustomObject][Ordered]@{
         Name = "eth1"
         Address = "38.95.4.145/26"
     },
@@ -203,7 +208,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth4"
-        Address = "dhcp"
+        Address = "192.168.1.1/24"
     }
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
@@ -216,6 +221,62 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
         NextHop = "100.3.102.1"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.16.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.4.0.0/16"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.128.1.0/32"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.2.2.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.200.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.54.0.0/19"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.128.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.32.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.40.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.64.0.0/16"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.200.2.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.92.2.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.55.1.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.172.0.0/16"
+        NextHop = "10.172.48.250"
     }
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -257,7 +318,9 @@ set interfaces ethernet eth2 firewall local name WAN_LOCAL
 set interfaces ethernet eth3 description 'Fios150'
 set interfaces ethernet eth3 firewall in name WAN_IN
 set interfaces ethernet eth3 firewall local name WAN_LOCAL
-set interfaces ethernet eth4 description 'Infrastructure'
+set interfaces ethernet eth0 description 'Infrastructure'
+set interfaces ethernet eth0 firewall in modify balance
+set interfaces ethernet eth4 firewall in modify balance
 set load-balance group G interface eth1
 set load-balance group G interface eth2
 set load-balance group G interface eth3
@@ -277,6 +340,7 @@ set system conntrack tcp half-open-connections 512
 set system conntrack tcp loose enable
 set system conntrack tcp max-retrans 3
 set system name-server 8.8.8.8
+set system offload hwnat enable
 "@
 }
 
