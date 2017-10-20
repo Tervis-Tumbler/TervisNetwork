@@ -231,7 +231,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         NextHop = "10.172.48.250"
     },
     [PSCustomObject][Ordered]@{
-        Address = "10.128.1.0/32"
+        Address = "10.128.1.0/24"
         NextHop = "10.172.48.250"
     },
     [PSCustomObject][Ordered]@{
@@ -295,12 +295,15 @@ set firewall group network-group LAN_NETS network 10.55.1.0/24
 set firewall group network-group LAN_NETS network 10.64.0.0/16
 set firewall group network-group LAN_NETS network 10.92.2.0/24
 set firewall group network-group LAN_NETS network 10.128.0.0/24
-set firewall group network-group LAN_NETS network 10.128.1.0/32
+set firewall group network-group LAN_NETS network 10.128.1.0/24
 set firewall group network-group LAN_NETS network 10.172.0.0/16
 set firewall group network-group LAN_NETS network 10.200.0.0/24
 set firewall group network-group LAN_NETS network 10.200.2.0/24
-set firewall modify balance rule 1 action modify
-set firewall modify balance rule 1 modify lb-group G
+set firewall modify balance rule 10 destination group network-group LAN_NETS
+set firewall modify balance rule 10 action modify
+set firewall modify balance rule 10 modify table main
+set firewall modify balance rule 20 action modify
+set firewall modify balance rule 20 modify lb-group G
 set firewall name WAN_IN default-action drop
 set firewall name WAN_IN description 'WAN to internal'
 set firewall name WAN_IN rule 10 action accept
