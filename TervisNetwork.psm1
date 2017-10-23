@@ -464,7 +464,7 @@ function Invoke-NetworkNodeProvision {
     )
     Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
     $NetworkNode = Get-NetworkNode -HardwareSerialNumber $HardwareSerialNumber
-    if ($NetworkNode.OperatingSystemName -eq "EdgeOS") {
+    if ($NetworkNode.OperatingSystemName -in "EdgeOS","VyOS") {
         #$NetworkNode | Set-EedgeOSUser
         $NetworkNode | Set-EdgeOSSystemHostName
         $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
@@ -517,6 +517,8 @@ function Invoke-LabHardwareProvision {
 #set protocols static interface-route 172.16.2.0/24 next-hop-interface vti0
 
     Invoke-NetworkNodeProvision -HardwareSerialNumber F09FC2DF9F3A
+    
+    Invoke-NetworkNodeProvision -HardwareSerialNumber 00155d00050c
 }
 
 function Get-TervisNetworkTunnelDefiniton {

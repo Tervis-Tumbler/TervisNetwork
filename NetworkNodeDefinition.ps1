@@ -29,6 +29,10 @@
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-ERWAN01"
     HardwareSerialNumber = "F09FC2DF9F3A"
+},
+[PSCustomObject][Ordered]@{
+    ComputerName = "INF-VYOS01"
+    HardwareSerialNumber = "00155d00050c"
 }
 
 
@@ -339,8 +343,11 @@ set interfaces ethernet eth0 description 'Infrastructure'
 set interfaces ethernet eth0 firewall in modify balance
 set interfaces ethernet eth4 firewall in modify balance
 set load-balance group G interface eth1
+set load-balance group G interface eth1 weight 20
 set load-balance group G interface eth2
+set load-balance group G interface eth2 weight 30
 set load-balance group G interface eth3
+set load-balance group G interface eth3 weight 50
 set service nat rule 5000 description 'masquerade for WAN'
 set service nat rule 5000 outbound-interface eth1
 set service nat rule 5000 type masquerade
@@ -358,6 +365,201 @@ set system conntrack tcp loose enable
 set system conntrack tcp max-retrans 3
 set system name-server 8.8.8.8
 set system offload hwnat enable
+"@
+},
+[PSCustomObject][Ordered]@{
+    ComputerName = "INF-VyOS01"
+    OperatingSystemName = "VyOS"
+    ManagementIPAddress = "10.172.48.43"
+    PasswordID = 5139
+    InterfaceDefinition = [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Address = "10.172.48.43/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth0"
+        Address = "38.95.4.140/26"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Address = "96.243.198.61/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth3"
+        Address = "100.3.102.6/24"
+    }
+    StaticRoute = [PSCustomObject][Ordered]@{
+        Address = "0.0.0.0/0"
+        NextHop = "38.95.4.129"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "0.0.0.0/0"
+        NextHop = "96.243.198.1"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "0.0.0.0/0"
+        NextHop = "100.3.102.1"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.16.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.4.0.0/16"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.128.1.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.2.2.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.200.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.54.0.0/19"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.128.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.32.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.40.0.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.64.0.0/16"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.200.2.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.92.2.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.55.1.0/24"
+        NextHop = "10.172.48.250"
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "10.172.0.0/16"
+        NextHop = "10.172.48.250"
+    }
+    AdditionalCommands = @"
+set firewall all-ping enable
+set firewall broadcast-ping disable
+set firewall ipv6-receive-redirects disable
+set firewall ipv6-src-route disable
+set firewall ip-src-route disable
+set firewall log-martians disable
+set firewall group network-group LAN_NETS network 10.2.2.0/24
+set firewall group network-group LAN_NETS network 10.4.0.0/16
+set firewall group network-group LAN_NETS network 10.16.0.0/24
+set firewall group network-group LAN_NETS network 10.32.0.0/24
+set firewall group network-group LAN_NETS network 10.40.0.0/24
+set firewall group network-group LAN_NETS network 10.54.0.0/19
+set firewall group network-group LAN_NETS network 10.55.1.0/24
+set firewall group network-group LAN_NETS network 10.64.0.0/16
+set firewall group network-group LAN_NETS network 10.92.2.0/24
+set firewall group network-group LAN_NETS network 10.128.0.0/24
+set firewall group network-group LAN_NETS network 10.128.1.0/24
+set firewall group network-group LAN_NETS network 10.172.0.0/16
+set firewall group network-group LAN_NETS network 10.200.0.0/24
+set firewall group network-group LAN_NETS network 10.200.2.0/24
+set firewall name WAN_IN default-action drop
+set firewall name WAN_IN description 'WAN to internal'
+set firewall name WAN_IN rule 10 action accept
+set firewall name WAN_IN rule 10 description 'Allow established/related'
+set firewall name WAN_IN rule 10 state established enable
+set firewall name WAN_IN rule 10 state related enable
+set firewall name WAN_IN rule 20 action drop
+set firewall name WAN_IN rule 20 description 'Drop invalid state'
+set firewall name WAN_IN rule 20 state invalid enable
+set firewall name WAN_LOCAL default-action drop
+set firewall name WAN_LOCAL description 'WAN to router'
+set firewall name WAN_LOCAL rule 10 action accept
+set firewall name WAN_LOCAL rule 10 description 'Allow established/related'
+set firewall name WAN_LOCAL rule 10 state established enable
+set firewall name WAN_LOCAL rule 10 state related enable
+set firewall name WAN_LOCAL rule 20 action drop
+set firewall name WAN_LOCAL rule 20 description 'Drop invalid state'
+set firewall name WAN_LOCAL rule 20 state invalid enable
+set firewall receive-redirects disable
+set firewall send-redirects enable
+set firewall source-validation disable
+set firewall syn-cookies enable
+set interfaces ethernet eth0 description 'Cogent'
+set interfaces ethernet eth0 firewall in name WAN_IN
+set interfaces ethernet eth0 firewall local name WAN_LOCAL
+set interfaces ethernet eth2 description 'Fios25'
+set interfaces ethernet eth2 firewall in name WAN_IN
+set interfaces ethernet eth2 firewall local name WAN_LOCAL
+set interfaces ethernet eth3 description 'Fios150'
+set interfaces ethernet eth3 firewall in name WAN_IN
+set interfaces ethernet eth3 firewall local name WAN_LOCAL
+set interfaces ethernet eth1 description 'Infrastructure'
+set nat source rule 5000 description 'masquerade for WAN'
+set nat source rule 5000 outbound-interface eth0
+set nat source rule 5000 translation address masquerade
+set nat source rule 5002 description 'masquerade for WAN 2'
+set nat source rule 5002 outbound-interface eth2
+set nat source rule 5002 translation address masquerade
+set nat source rule 5003 description 'masquerade for WAN 3'
+set nat source rule 5003 outbound-interface eth3
+set nat source rule 5003 translation address masquerade
+set system conntrack expect-table-size 4096
+set system conntrack hash-size 4096
+set system conntrack table-size 32768
+set system conntrack tcp half-open-connections 512
+set system conntrack tcp loose enable
+set system conntrack tcp max-retrans 3
+set system name-server 8.8.8.8
+set load-balancing wan rule 5 exclude
+set load-balancing wan rule 5 inbound-interface eth+
+set load-balancing wan rule 5 destination address 10.2.2.0/24
+set load-balancing wan rule 5 destination address 10.4.0.0/16
+set load-balancing wan rule 5 destination address 10.16.0.0/24
+set load-balancing wan rule 5 destination address 10.32.0.0/24
+set load-balancing wan rule 5 destination address 10.40.0.0/24
+set load-balancing wan rule 5 destination address 10.54.0.0/19
+set load-balancing wan rule 5 destination address 10.55.1.0/24
+set load-balancing wan rule 5 destination address 10.64.0.0/16
+set load-balancing wan rule 5 destination address 10.92.2.0/24
+set load-balancing wan rule 5 destination address 10.128.0.0/24
+set load-balancing wan rule 5 destination address 10.128.1.0/24
+set load-balancing wan rule 5 destination address 10.172.0.0/16
+set load-balancing wan rule 5 destination address 10.200.0.0/24
+set load-balancing wan rule 5 destination address 10.200.2.0/24
+set load-balancing wan interface-health eth0 failure-count 3
+set load-balancing wan interface-health eth0 nexthop 38.95.4.129
+set load-balancing wan interface-health eth0 test 10 type ping
+set load-balancing wan interface-health eth0 test 10 target 8.8.8.8
+set load-balancing wan interface-health eth2 failure-count 3
+set load-balancing wan interface-health eth2 nexthop 96.243.198.1
+set load-balancing wan interface-health eth2 test 10 type ping
+set load-balancing wan interface-health eth2 test 10 target 8.8.4.4
+set load-balancing wan interface-health eth3 failure-count 3
+set load-balancing wan interface-health eth3 nexthop 100.3.102.1
+set load-balancing wan interface-health eth3 test 10 type ping
+set load-balancing wan interface-health eth3 test 10 target 4.2.2.2
+set load-balancing wan rule 10 inbound-interface eth1
+set load-balancing wan rule 10 interface eth0
+set load-balancing wan rule 10 interface eth2
+set load-balancing wan rule 10 interface eth3
+set load-balancing wan rule 10 interface eth0 weight 10
+set load-balancing wan rule 10 interface eth2 weight 90
+set load-balancing wan rule 10 interface eth3 weight 0
 "@
 }
 
