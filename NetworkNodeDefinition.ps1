@@ -526,21 +526,54 @@ set system conntrack tcp loose enable
 set system conntrack tcp max-retrans 3
 set system name-server 8.8.8.8
 set load-balancing wan rule 5 exclude
-set load-balancing wan rule 5 inbound-interface eth+
+set load-balancing wan rule 5 inbound-interface eth1
 set load-balancing wan rule 5 destination address 10.2.2.0/24
-set load-balancing wan rule 5 destination address 10.4.0.0/16
-set load-balancing wan rule 5 destination address 10.16.0.0/24
-set load-balancing wan rule 5 destination address 10.32.0.0/24
-set load-balancing wan rule 5 destination address 10.40.0.0/24
-set load-balancing wan rule 5 destination address 10.54.0.0/19
-set load-balancing wan rule 5 destination address 10.55.1.0/24
-set load-balancing wan rule 5 destination address 10.64.0.0/16
-set load-balancing wan rule 5 destination address 10.92.2.0/24
-set load-balancing wan rule 5 destination address 10.128.0.0/24
-set load-balancing wan rule 5 destination address 10.128.1.0/24
-set load-balancing wan rule 5 destination address 10.172.0.0/16
-set load-balancing wan rule 5 destination address 10.200.0.0/24
-set load-balancing wan rule 5 destination address 10.200.2.0/24
+set load-balancing wan rule 6 exclude
+set load-balancing wan rule 6 inbound-interface eth1
+set load-balancing wan rule 6 destination address 10.4.0.0/16
+set load-balancing wan rule 7 exclude
+set load-balancing wan rule 7 inbound-interface eth1
+set load-balancing wan rule 7 destination address 10.16.0.0/24
+set load-balancing wan rule 8 exclude
+set load-balancing wan rule 8 inbound-interface eth1
+set load-balancing wan rule 8 destination address 10.32.0.0/24
+set load-balancing wan rule 9 exclude
+set load-balancing wan rule 9 inbound-interface eth1
+set load-balancing wan rule 9 destination address 10.40.0.0/24
+set load-balancing wan rule 10 exclude
+set load-balancing wan rule 10 inbound-interface eth1
+set load-balancing wan rule 10 destination address 10.54.0.0/19
+set load-balancing wan rule 11 exclude
+set load-balancing wan rule 11 inbound-interface eth1
+set load-balancing wan rule 11 destination address 10.55.1.0/24
+set load-balancing wan rule 12 exclude
+set load-balancing wan rule 12 inbound-interface eth1
+set load-balancing wan rule 12 destination address 10.64.0.0/16
+set load-balancing wan rule 13 exclude
+set load-balancing wan rule 13 inbound-interface eth1
+set load-balancing wan rule 13 destination address 10.92.2.0/24
+set load-balancing wan rule 14 exclude
+set load-balancing wan rule 14 inbound-interface eth1
+set load-balancing wan rule 14 destination address 10.128.0.0/24
+set load-balancing wan rule 15 exclude
+set load-balancing wan rule 15 inbound-interface eth1
+set load-balancing wan rule 15 destination address 10.128.1.0/24
+set load-balancing wan rule 16 exclude
+set load-balancing wan rule 16 inbound-interface eth1
+set load-balancing wan rule 16 destination address 10.172.0.0/16
+set load-balancing wan rule 17 exclude
+set load-balancing wan rule 17 inbound-interface eth1
+set load-balancing wan rule 17 destination address 10.200.0.0/24
+set load-balancing wan rule 18 exclude
+set load-balancing wan rule 18 inbound-interface eth1
+set load-balancing wan rule 18 destination address 10.200.2.0/24
+set load-balancing wan rule 100 inbound-interface eth1
+set load-balancing wan rule 100 interface eth0
+set load-balancing wan rule 100 interface eth2
+set load-balancing wan rule 100 interface eth3
+set load-balancing wan rule 100 interface eth0 weight 10
+set load-balancing wan rule 100 interface eth2 weight 90
+set load-balancing wan rule 100 interface eth3 weight 0
 set load-balancing wan interface-health eth0 failure-count 3
 set load-balancing wan interface-health eth0 nexthop 38.95.4.129
 set load-balancing wan interface-health eth0 test 10 type ping
@@ -553,13 +586,6 @@ set load-balancing wan interface-health eth3 failure-count 3
 set load-balancing wan interface-health eth3 nexthop 100.3.102.1
 set load-balancing wan interface-health eth3 test 10 type ping
 set load-balancing wan interface-health eth3 test 10 target 4.2.2.2
-set load-balancing wan rule 10 inbound-interface eth1
-set load-balancing wan rule 10 interface eth0
-set load-balancing wan rule 10 interface eth2
-set load-balancing wan rule 10 interface eth3
-set load-balancing wan rule 10 interface eth0 weight 10
-set load-balancing wan rule 10 interface eth2 weight 90
-set load-balancing wan rule 10 interface eth3 weight 0
 "@
 }
 
