@@ -818,6 +818,10 @@ set load-balancing wan interface-health eth3 test 10 target 4.2.2.2
 $NetworkNodeOperatingSystemTemplate = [PSCustomObject][Ordered]@{
     Name = "EdgeOS"
     DefaultCredential = 5002    
+},
+[PSCustomObject][Ordered]@{
+    Name = "ArchLinux"
+    DefaultCredential = 5178    
 }
 
 $TunnelDefinition = [PSCustomObject][Ordered]@{
