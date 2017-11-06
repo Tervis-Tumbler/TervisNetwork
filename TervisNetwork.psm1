@@ -677,3 +677,30 @@ java -jar lib\ace.jar installsvc
 java -jar lib\ace.jar startsvc
 "@    
 }
+
+function Invoke-ArchRouterProvision {
+    Invoke-ApplicationProvision -ApplicationName ArchRouter
+    $Nodes = Get-TervisApplicationNode -ApplicationName ArchRouter -IncludeSSHSession -IncludeSFTSession -IncludeVM
+    $Nodes | Copy-PathToSFTPDestinationPath -Path "$ModulePath\ArchLinux" -DestinationPath "/"
+
+}
+
+function Copy-PathToSFTPDestinationPath {
+    param (
+        [Parameter(Mandatory)]$Path,
+        [Parameter(Mandatory)]$DestinationPath,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SFTPSession
+    )
+    $Files = Get-ChildItem -Recurse -Path $Path -File
+    foreach ($File in $Files) {
+        $DestinationFileName = $File.Name
+        $RelativeDestinationPath = $File.DirectoryName.Replace($Path,"").Replace("\","/").Substring(1)
+        $DestinationPathOfFile = "$DestinationPath$RelativeDestinationPath"
+        
+        $Folder = Get-SFTPChildItem -Path "$DestinationPathOfFile" -SFTPSession $SFTPSession -ErrorAction SilentlyContinue
+        if (-not $Folder) {
+            New-SFTPItem -ItemType Directory -Path $DestinationPathOfFile -SFTPSession $SFTPSession | Out-Null
+        }
+        Set-SFTPFile -RemotePath $DestinationPathOfFile -LocalFile $File.FullName -SFTPSession $SFTPSession
+    }
+}
