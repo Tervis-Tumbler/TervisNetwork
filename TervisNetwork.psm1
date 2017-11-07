@@ -520,6 +520,7 @@ function Invoke-LabHardwareProvision {
     
     Invoke-NetworkNodeProvision -HardwareSerialNumber 00155d00050c
     Invoke-NetworkNodeProvision -HardwareSerialNumber c81f66e82fec
+    Invoke-NetworkNodeProvision -HardwareSerialNumber 1721k788a204095a9
 }
 
 function Get-TervisNetworkTunnelDefiniton {
