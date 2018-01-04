@@ -397,7 +397,13 @@ set system offload hwnat enable
     },
     [PSCustomObject][Ordered]@{
         Name = "eth4"
+        VIFVlan = 48
         Address = "10.172.48.150/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth4"
+        VIFVlan = 24
+        Address = "dhcp"
     }
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "10.4.0.0/16"
