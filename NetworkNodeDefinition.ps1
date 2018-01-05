@@ -382,24 +382,31 @@ set system offload hwnat enable
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth0"
         Address = "192.168.1.1/24"
-    },
-    [PSCustomObject][Ordered]@{
-        Name = "eth2"
-        Description = "Fios25"
-        Address = "96.243.198.61/24"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
     },
     [PSCustomObject][Ordered]@{
         Name = "eth3"
-        Description = "Fios150"
-        Address = "100.3.102.6/24"
+        Description = "Fios25"
+        VIFVlan = 21
+        Address = "96.243.198.61/24"
+        UseForWANLoadBalancing = $True
+        Weight = 50
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth4"
+        Name = "eth3"
         Description = "Cogent"
         VIFVlan = 28
         Address = "38.95.4.140/26"
         UseForWANLoadBalancing = $True
-        Weight = 20
+        Weight = 30
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth3"
+        Description = "Fios150"
+        VIFVlan = 20
+        Address = "100.3.102.6/24"
+        UseForWANLoadBalancing = $True
+        Weight = 50
     },
     [PSCustomObject][Ordered]@{
         Name = "eth4"
@@ -411,7 +418,8 @@ set system offload hwnat enable
     [PSCustomObject][Ordered]@{
         Name = "eth4"
         VIFVlan = 24
-        Address = "dhcp"
+        Address = "10.172.28.55/21"
+        Description = "Standard endpoints"
         LoadBalanceIngressTrafficDestinedToWAN = $True
     }
     StaticRoute = [PSCustomObject][Ordered]@{

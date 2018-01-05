@@ -227,7 +227,7 @@ function Set-EdgeOSSystemHostName {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ComputerName
     )
     process {
-        Invoke-EdgeOSSSHConfigureModeCommandWrapper -Command "set system host-name $ComputerName" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set system host-name $ComputerName" -SSHSession $SSHSession
     }
 }
 
@@ -256,11 +256,11 @@ function Set-EdgeOSInterfacesEthernetVIFAddress {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Vlan,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$VIFVlan,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address
     )
     process {
-        Invoke-EdgeOSSSHSetCommand -Command "set interfaces ethernet $Name vif $Vlan address $Address" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHSetCommand -Command "set interfaces ethernet $Name vif $VIFVlan address $Address" -SSHSession $SSHSession
     }
 }
 
@@ -271,7 +271,7 @@ function Set-EdgeOSProtocolsStaticRoute {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop        
     )
     process {
-        Invoke-EdgeOSSSHConfigureModeCommandWrapper -Command "set protocols static route $Address next-hop $NextHop" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set protocols static route $Address next-hop $NextHop" -SSHSession $SSHSession
     }
 }
 
@@ -305,25 +305,6 @@ cli-shell-api teardownSession
 }
 
 function Invoke-EdgeOSSSHConfigureModeCommand {
-    param (
-        [Parameter(Mandatory)]$Command,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
-    )
-    process {
-        $ScriptNeeded = @"
-ubnt@testing:/config/scripts$ cat executecommand.sh
-#!/bin/vbash
-source /opt/vyatta/etc/functions/script-template
-eval `$1
-"@
-        $CommandToExecute = @"
-/config/scripts/executecommand.sh "configure; $Command; commit"
-"@    
-        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
-    }
-}
-
-function Invoke-EdgeOSSSHConfigureModeCommandWrapper {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ValueFromPipeline)]$Command,
@@ -361,6 +342,7 @@ cli-shell-api teardownSession
 }
 
 function Invoke-EdgeOSSSHCommandWithTemplate {
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory)]$Command,
         [ValidateSet("Operational")]$CommandType,
@@ -374,14 +356,21 @@ function Invoke-EdgeOSSSHCommandWithTemplate {
             $Command
         }
 
-        if ($PSCmdlet.ShouldProcess($SSHSession.Host)) {
-            Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
-        } else {
-            $CommandToExecute
-        }
+        Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
     }
 }
 
+function Invoke-EdgeOSSSHOperationalModeCommand {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory)]$Command,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        $CommandToExecute = "/opt/vyatta/bin/vyatta-op-cmd-wrapper " + $Command
+        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+    }   
+}
 
 function Invoke-EdgeOSSSHCommand {
     [CmdletBinding(SupportsShouldProcess)]
@@ -495,7 +484,7 @@ function Invoke-NetworkNodeProvision {
         #Add-EdgeOSSystemImage -ImagePath https://dl.ubnt.com/firmwares/edgemax/v1.9.7/ER-e50.v1.9.7+hotfix.3.5013617.tar
 
         $NetworkNode.AdditionalCommands -split "`r`n" |
-        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $NetworkNode.SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $NetworkNode.SSHSession
 
         $NetWorkNode | Invoke-EdgeOSInterfaceUseProvision
 
@@ -510,14 +499,12 @@ function Invoke-EdgeOSInterfaceProvision {
     )
     process {
         $InterfaceDefinition |
-        Where {$_.Address} |
+        Where {-not $_.VIFVlan} |
         Set-EdgeOSInterfacesEthernetAddress -SSHSession $SSHSession
 
         $InterfaceDefinition |
-        Where {$_.VIF} | % {
-            $_.VIF |
-            Set-EdgeOSInterfacesEthernetVIFAddress -Name $_.Name -SSHSession $SSHSession
-        }
+        Where {$_.VIFVlan} | 
+        Set-EdgeOSInterfacesEthernetVIFAddress -SSHSession $SSHSession
     }
 }
 
@@ -558,7 +545,7 @@ function Invoke-EdgeOSTunnelProvision {
         New-VyOSSiteToSiteWANVPNCommandsFromTunnelDefinition -TunnelSide $TunnelMemberDefinition.TunnelSide -InterfaceDefinition $InterfaceDefinition
 
         $Commands -split "`r`n" |
-        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
     }
 }
 
@@ -720,22 +707,44 @@ function Copy-PathToSFTPDestinationPath {
     }
 }
 
+function Get-EdgeOSEtherNetInterfaceStanza {
+    param (
+        $Name,
+        $VIFVlan
+    )
+    process {
+        if ($VIFVlan) { 
+            "$InterfaceName vif $VIFVlan" 
+        } else {
+            $InterfaceName
+        }
+    }
+}
+
 function New-EdgeOSLoadBalancedWanInterfaceStanza {
     param (
         $InterfaceName,
+        $VIFVlan,
         $Weight,
         $Description,
         $NatRuleNumber
     )
+    $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
+
+    $InterfaceStanza = if ($VIFVlan) { 
+        "$InterfaceName.$VIFVlan" 
+    } else {
+        $InterfaceName
+    }
 @"
-set load-balance group G interface $InterfaceName
-set load-balance group G interface $InterfaceName weight $Weight
+set load-balance group G interface $InterfaceStanza
+set load-balance group G interface $InterfaceStanza weight $Weight
 set service nat rule $NatRuleNumber description 'masquerade for $Description'
-set service nat rule $NatRuleNumber outbound-interface $Interface
+set service nat rule $NatRuleNumber outbound-interface $InterfaceStanza
 set service nat rule $NatRuleNumber type masquerade
-set interfaces ethernet $InterfaceName description '$Description'
-set interfaces ethernet $InterfaceName firewall in name WAN_IN
-set interfaces ethernet $InterfaceName firewall local name WAN_LOCAL
+set interfaces ethernet $EthernetInterfaceStanza description '$Description'
+set interfaces ethernet $EthernetInterfaceStanza firewall in name WAN_IN
+set interfaces ethernet $EthernetInterfaceStanza firewall local name WAN_LOCAL
 "@
 }
 
@@ -770,10 +779,12 @@ set firewall name WAN_LOCAL rule 20 state invalid enable
 
 function New-EdgeOSLoadBalancedLanInterfaceStanza {
     param (
-        $InterfaceName
+        $InterfaceName,
+        $VIFVlan
     )
+    $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
 @"
-set interfaces ethernet $InterfaceName firewall in modify balance
+set interfaces ethernet $EthernetInterfaceStanza firewall in modify balance
 "@
 }
 
@@ -788,10 +799,10 @@ function Set-EdgeOSLoadBalancedWanInterface {
 
         $Commands = @()
         $Commands += New-EdgeOSFirewallLoadBalanceStanza
-        $Commands += New-EdgeOSLoadBalancedWanInterfaceStanza -NatRuleNumber $NextAvailableNATRuleNumber -InterfaceName $InterfaceDefinition.Name -Weight $InterfaceDefinition.Weight -Description $InterfaceDefinition.Description
+        $Commands += New-EdgeOSLoadBalancedWanInterfaceStanza -NatRuleNumber $NextAvailableNATRuleNumber -InterfaceName $InterfaceDefinition.Name -Weight $InterfaceDefinition.Weight -Description $InterfaceDefinition.Description -VIFVlan $InterfaceDefinition.VIFVlan
 
         $Commands -split "`r`n" |
-        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
     }
 }
 
@@ -800,12 +811,15 @@ function Get-EdgeOSNextAvailableNATRuleNumber {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
     )
     process {
-        $Results = Invoke-EdgeOSSSHCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession
+        $Results = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession | 
+        Select-Object -ExpandProperty Output
         
-        $Results -split "`r`n" | 
+        [int]$LastNatRuleNumberUsed = $Results -split "`r`n" | 
         Select-StringBetween -After "set service nat rule " -Before " " |
         Sort-Object -Unique -Descending |
         Select-Object -First 1
+
+        $LastNatRuleNumberUsed + 1
     }
 }
 
@@ -816,10 +830,10 @@ function Set-EdgeOSLoadBalancedLanInterface {
     )
     process {
         $Commands = @()
-        $Commands += New-EdgeOSLoadBalancedLanInterfaceStanza -InterfaceName $InterfaceDefinition.Name
+        $Commands += New-EdgeOSLoadBalancedLanInterfaceStanza -InterfaceName $InterfaceDefinition.Name -VIFVlan $InterfaceDefinition.VIFVlan
 
         $Commands -split "`r`n" |
-        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
     }
 }
 
@@ -832,10 +846,14 @@ function Invoke-EdgeOSInterfaceUseProvision {
     process {
         $InterfaceDefinition |
         Where {$_.UseForWANLoadBalancing} |
-        Set-EdgeOSLoadBalancedWanInterface -SSHSession $SSHSession
+        foreach {
+            Set-EdgeOSLoadBalancedWanInterface -SSHSession $SSHSession -InterfaceDefinition $_
+        }
         
         $InterfaceDefinition |
         Where {$_.LoadBalanceIngressTrafficDestinedToWAN} |
-        Set-EdgeOSLoadBalancedLanInterface -SSHSession $SSHSession
+        foreach {
+            Set-EdgeOSLoadBalancedLanInterface -SSHSession $SSHSession -InterfaceDefinition $_
+        }
     }
 }
