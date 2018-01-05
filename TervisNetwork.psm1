@@ -221,6 +221,7 @@ function Get-EdgeOSVersion {
 }
 
 function Set-EdgeOSSystemHostName {
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$ComputerName
@@ -323,6 +324,7 @@ eval `$1
 }
 
 function Invoke-EdgeOSSSHConfigureModeCommandWrapper {
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ValueFromPipeline)]$Command,
         [Parameter(Mandatory)]$SSHSession
@@ -372,18 +374,27 @@ function Invoke-EdgeOSSSHCommandWithTemplate {
             $Command
         }
 
-        Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
+        if ($PSCmdlet.ShouldProcess($SSHSession.Host)) {
+            Invoke-SSHCommandWithTemplate -Command $CommandToExecute -ModuleName TervisNetwork -TemplateType $TemplateType -SSHSession $SSHSession
+        } else {
+            $CommandToExecute
+        }
     }
 }
 
 
 function Invoke-EdgeOSSSHCommand {
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory)]$Command,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
     )
     process {
-        Invoke-SSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+        if ($PSCmdlet.ShouldProcess($SSHSession.Host)) {
+            Invoke-SSHCommand -Command $Command -SSHSession $SSHSession
+        } else {
+            $Command
+        }
     }
 }
 
@@ -459,6 +470,7 @@ function Add-NetworkNodeCustomProperites {
 }
 
 function Invoke-NetworkNodeProvision {
+    [CmdletBinding(SupportsShouldProcess)]
     param (
         $HardwareSerialNumber
     )
@@ -484,6 +496,8 @@ function Invoke-NetworkNodeProvision {
 
         $NetworkNode.AdditionalCommands -split "`r`n" |
         Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $NetworkNode.SSHSession
+
+        $NetWorkNode | Invoke-EdgeOSInterfaceUseProvision
 
         $NetworkNode | Invoke-EdgeOSSSHSaveCommand
     }
@@ -703,5 +717,125 @@ function Copy-PathToSFTPDestinationPath {
             New-SFTPItem -ItemType Directory -Path $DestinationPathOfFile -SFTPSession $SFTPSession | Out-Null
         }
         Set-SFTPFile -RemotePath $DestinationPathOfFile -LocalFile $File.FullName -SFTPSession $SFTPSession
+    }
+}
+
+function New-EdgeOSLoadBalancedWanInterfaceStanza {
+    param (
+        $InterfaceName,
+        $Weight,
+        $Description,
+        $NatRuleNumber
+    )
+@"
+set load-balance group G interface $InterfaceName
+set load-balance group G interface $InterfaceName weight $Weight
+set service nat rule $NatRuleNumber description 'masquerade for $Description'
+set service nat rule $NatRuleNumber outbound-interface $Interface
+set service nat rule $NatRuleNumber type masquerade
+set interfaces ethernet $InterfaceName description '$Description'
+set interfaces ethernet $InterfaceName firewall in name WAN_IN
+set interfaces ethernet $InterfaceName firewall local name WAN_LOCAL
+"@
+}
+
+function New-EdgeOSFirewallLoadBalanceStanza {
+@"
+set firewall modify balance rule 10 destination group network-group LAN_NETS
+set firewall modify balance rule 10 action modify
+set firewall modify balance rule 10 modify table main
+set firewall modify balance rule 20 action modify
+set firewall modify balance rule 20 modify lb-group G
+set firewall name WAN_IN default-action drop
+set firewall name WAN_IN description 'WAN to internal'
+set firewall name WAN_IN rule 10 action accept
+set firewall name WAN_IN rule 10 description 'Allow established/related'
+set firewall name WAN_IN rule 10 state established enable
+set firewall name WAN_IN rule 10 state related enable
+set firewall name WAN_IN rule 20 action drop
+set firewall name WAN_IN rule 20 description 'Drop invalid state'
+set firewall name WAN_IN rule 20 state invalid enable
+set firewall name WAN_LOCAL default-action drop
+set firewall name WAN_LOCAL description 'WAN to router'
+set firewall name WAN_LOCAL rule 10 action accept
+set firewall name WAN_LOCAL rule 10 description 'Allow established/related'
+set firewall name WAN_LOCAL rule 10 state established enable
+set firewall name WAN_LOCAL rule 10 state related enable
+set firewall name WAN_LOCAL rule 20 action drop
+set firewall name WAN_LOCAL rule 20 description 'Drop invalid state'
+set firewall name WAN_LOCAL rule 20 state invalid enable
+"@
+}
+
+
+function New-EdgeOSLoadBalancedLanInterfaceStanza {
+    param (
+        $InterfaceName
+    )
+@"
+set interfaces ethernet $InterfaceName firewall in modify balance
+"@
+}
+
+function Set-EdgeOSLoadBalancedWanInterface {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceDefinition
+    )
+    process {
+        $NextAvailableNATRuleNumber = Get-EdgeOSNextAvailableNATRuleNumber -SSHSession $SSHSession
+
+        $Commands = @()
+        $Commands += New-EdgeOSFirewallLoadBalanceStanza
+        $Commands += New-EdgeOSLoadBalancedWanInterfaceStanza -NatRuleNumber $NextAvailableNATRuleNumber -InterfaceName $InterfaceDefinition.Name -Weight $InterfaceDefinition.Weight -Description $InterfaceDefinition.Description
+
+        $Commands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $SSHSession
+    }
+}
+
+function Get-EdgeOSNextAvailableNATRuleNumber {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        $Results = Invoke-EdgeOSSSHCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession
+        
+        $Results -split "`r`n" | 
+        Select-StringBetween -After "set service nat rule " -Before " " |
+        Sort-Object -Unique -Descending |
+        Select-Object -First 1
+    }
+}
+
+function Set-EdgeOSLoadBalancedLanInterface {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceDefinition
+    )
+    process {
+        $Commands = @()
+        $Commands += New-EdgeOSLoadBalancedLanInterfaceStanza -InterfaceName $InterfaceDefinition.Name
+
+        $Commands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommandWrapper -SSHSession $SSHSession
+    }
+}
+
+
+function Invoke-EdgeOSInterfaceUseProvision {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceDefinition
+    )
+    process {
+        $InterfaceDefinition |
+        Where {$_.UseForWANLoadBalancing} |
+        Set-EdgeOSLoadBalancedWanInterface -SSHSession $SSHSession
+        
+        $InterfaceDefinition |
+        Where {$_.LoadBalanceIngressTrafficDestinedToWAN} |
+        Set-EdgeOSLoadBalancedLanInterface -SSHSession $SSHSession
     }
 }

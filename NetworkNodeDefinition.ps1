@@ -199,7 +199,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-ERWAN01"
     OperatingSystemName = "EdgeOS"
-    ManagementIPAddress = "192.168.1.1"
+    ManagementIPAddress = "INF-ERWAN01"
     PasswordID = 5135
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth0"
@@ -377,33 +377,42 @@ set system offload hwnat enable
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-ERWAN02"
     OperatingSystemName = "EdgeOS"
-    ManagementIPAddress = "192.168.1.1"
+    ManagementIPAddress = "INF-ERWAN02"
     PasswordID = 5189
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth0"
         Address = "192.168.1.1/24"
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth1"
-        Address = "38.95.4.140/26"
-    },
-    [PSCustomObject][Ordered]@{
         Name = "eth2"
+        Description = "Fios25"
         Address = "96.243.198.61/24"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth3"
+        Description = "Fios150"
         Address = "100.3.102.6/24"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth4"
+        Description = "Cogent"
+        VIFVlan = 28
+        Address = "38.95.4.140/26"
+        UseForWANLoadBalancing = $True
+        Weight = 20
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth4"
         VIFVlan = 48
+        Description = "Infrastructure"
         Address = "10.172.48.150/24"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
     },
     [PSCustomObject][Ordered]@{
         Name = "eth4"
         VIFVlan = 24
         Address = "dhcp"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
     }
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "10.4.0.0/16"
@@ -482,60 +491,10 @@ set firewall group network-group LAN_NETS network 10.128.1.0/24
 set firewall group network-group LAN_NETS network 10.172.0.0/16
 set firewall group network-group LAN_NETS network 10.200.0.0/24
 set firewall group network-group LAN_NETS network 10.200.2.0/24
-set firewall modify balance rule 10 destination group network-group LAN_NETS
-set firewall modify balance rule 10 action modify
-set firewall modify balance rule 10 modify table main
-set firewall modify balance rule 20 action modify
-set firewall modify balance rule 20 modify lb-group G
-set firewall name WAN_IN default-action drop
-set firewall name WAN_IN description 'WAN to internal'
-set firewall name WAN_IN rule 10 action accept
-set firewall name WAN_IN rule 10 description 'Allow established/related'
-set firewall name WAN_IN rule 10 state established enable
-set firewall name WAN_IN rule 10 state related enable
-set firewall name WAN_IN rule 20 action drop
-set firewall name WAN_IN rule 20 description 'Drop invalid state'
-set firewall name WAN_IN rule 20 state invalid enable
-set firewall name WAN_LOCAL default-action drop
-set firewall name WAN_LOCAL description 'WAN to router'
-set firewall name WAN_LOCAL rule 10 action accept
-set firewall name WAN_LOCAL rule 10 description 'Allow established/related'
-set firewall name WAN_LOCAL rule 10 state established enable
-set firewall name WAN_LOCAL rule 10 state related enable
-set firewall name WAN_LOCAL rule 20 action drop
-set firewall name WAN_LOCAL rule 20 description 'Drop invalid state'
-set firewall name WAN_LOCAL rule 20 state invalid enable
 set firewall receive-redirects disable
 set firewall send-redirects enable
 set firewall source-validation disable
 set firewall syn-cookies enable
-set interfaces ethernet eth1 description 'Cogent'
-set interfaces ethernet eth1 firewall in name WAN_IN
-set interfaces ethernet eth1 firewall local name WAN_LOCAL
-set interfaces ethernet eth2 description 'Fios25'
-set interfaces ethernet eth2 firewall in name WAN_IN
-set interfaces ethernet eth2 firewall local name WAN_LOCAL
-set interfaces ethernet eth3 description 'Fios150'
-set interfaces ethernet eth3 firewall in name WAN_IN
-set interfaces ethernet eth3 firewall local name WAN_LOCAL
-set interfaces ethernet eth4 description 'Infrastructure'
-set interfaces ethernet eth4 firewall in modify balance
-set interfaces ethernet eth0 firewall in modify balance
-set load-balance group G interface eth1
-set load-balance group G interface eth1 weight 20
-set load-balance group G interface eth2
-set load-balance group G interface eth2 weight 30
-set load-balance group G interface eth3
-set load-balance group G interface eth3 weight 50
-set service nat rule 5000 description 'masquerade for WAN'
-set service nat rule 5000 outbound-interface eth1
-set service nat rule 5000 type masquerade
-set service nat rule 5002 description 'masquerade for WAN 2'
-set service nat rule 5002 outbound-interface eth2
-set service nat rule 5002 type masquerade
-set service nat rule 5003 description 'masquerade for WAN 3'
-set service nat rule 5003 outbound-interface eth3
-set service nat rule 5003 type masquerade
 set system conntrack expect-table-size 4096
 set system conntrack hash-size 4096
 set system conntrack table-size 32768
