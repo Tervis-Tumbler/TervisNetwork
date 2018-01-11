@@ -421,6 +421,13 @@ set system offload hwnat enable
         Address = "10.172.28.55/21"
         Description = "Standard endpoints"
         LoadBalanceIngressTrafficDestinedToWAN = $True
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth4"
+        VIFVlan = 12
+        Address = "DHCP"
+        Description = "Wifi-Data"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
     }
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "10.4.0.0/16"

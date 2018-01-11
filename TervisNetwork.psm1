@@ -389,10 +389,12 @@ function Invoke-EdgeOSSSHCommand {
 
 function Get-NetworkNodeDefinition {
     param (
-        $HardwareSerialNumber
+        [Parameter(Mandatory,ParameterSetName="HardwareSerialNumber")]$HardwareSerialNumber,
+        [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName
     )
     $HardwareMapping = $NetworkNodeDefinitionToHardwareMapping | 
-    where HardwareSerialNumber -eq $HardwareSerialNumber
+    Where-Object {-not $HardwareSerialNumber -or $_.HardwareSerialNumber -eq $HardwareSerialNumber} |
+    Where-Object {-not $ComputerName -or $_.ComputerName -eq $ComputerName} 
 
     $NetworkNodeDefinition |
     where ComputerName -eq $HardwareMapping.ComputerName
@@ -421,10 +423,12 @@ function Add-NetworkNodeOperatingSystemTemplateCustomProperites {
 
 function Get-NetworkNode {
     param (
-        $HardwareSerialNumber,
+        [Parameter(Mandatory,ParameterSetName="HardwareSerialNumber")]$HardwareSerialNumber,
+        [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName,
         [Switch]$UseDefaultCredential
     )
-    $NetworkNode = Get-NetworkNodeDefinition -HardwareSerialNumber $HardwareSerialNumber
+    $Parameters = $PSBoundParameters | ConvertFrom-PSBoundParameters -ExcludeProperty $UseDefaultCredential
+    $NetworkNode = Get-NetworkNodeDefinition @Parameters
     $NetworkNode | 
     Add-NetworkNodeCustomProperites -UseDefaultCredential:$UseDefaultCredential
 }
@@ -461,10 +465,11 @@ function Add-NetworkNodeCustomProperites {
 function Invoke-NetworkNodeProvision {
     [CmdletBinding(SupportsShouldProcess)]
     param (
-        $HardwareSerialNumber
+        [Parameter(Mandatory,ParameterSetName="HardwareSerialNumber")]$HardwareSerialNumber,
+        [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName
     )
     Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
-    $NetworkNode = Get-NetworkNode -HardwareSerialNumber $HardwareSerialNumber
+    $NetworkNode = Get-NetworkNode @PSBoundParameters
     if ($NetworkNode.OperatingSystemName -in "EdgeOS","VyOS") {
         #$NetworkNode | Set-EedgeOSUser
         $NetworkNode | Set-EdgeOSSystemHostName
