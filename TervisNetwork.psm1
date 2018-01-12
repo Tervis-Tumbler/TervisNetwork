@@ -427,7 +427,7 @@ function Get-NetworkNode {
         [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName,
         [Switch]$UseDefaultCredential
     )
-    $Parameters = $PSBoundParameters | ConvertFrom-PSBoundParameters -ExcludeProperty $UseDefaultCredential
+    $Parameters = $PSBoundParameters | ConvertFrom-PSBoundParameters -ExcludeProperty $UseDefaultCredential -AsHashTable
     $NetworkNode = Get-NetworkNodeDefinition @Parameters
     $NetworkNode | 
     Add-NetworkNodeCustomProperites -UseDefaultCredential:$UseDefaultCredential
