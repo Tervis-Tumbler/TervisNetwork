@@ -260,16 +260,20 @@ function Set-EdgeOSInterfacesEthernet {
 
         Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand address $Address" -SSHSession $SSHSession
         if ($Description) {
-            Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand Description $Description" -SSHSession $SSHSession
+            Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand description $Description" -SSHSession $SSHSession
         }
 
         if ($VRRPGroup) {
             $SetVRRGroupCommand = "$SetInterfaceCommand vrrp vrrp-group $($VRRPGroup.Number)"
             Invoke-EdgeOSSSHSetCommand -Command "$SetVRRGroupCommand virtual-address $($VRRPGroup.VIP)" -SSHSession $SSHSession
-            Invoke-EdgeOSSSHSetCommand -Command "$SetVRRGroupCommand authentication type ah" -SSHSession $SSHSession
+            
             $Credential = Get-PasswordstateCredential -PasswordID $VRRPGroup.AuthenticationPasswordStateEntry
             $Password = $Credential.GetNetworkCredential().password
-            Invoke-EdgeOSSSHSetCommand -Command "$SetVRRGroupCommand authentication password $Password" -SSHSession $SSHSession
+
+            "$SetVRRGroupCommand authentication type ah", 
+            "$SetVRRGroupCommand authentication password $Password" | 
+            Invoke-EdgeOSSSHSetCommand -SSHSession $SSHSession
+            
             Invoke-EdgeOSSSHSetCommand -Command "$SetVRRGroupCommand sync-group MainSyncGroup" -SSHSession $SSHSession
         }
     }
@@ -298,19 +302,26 @@ function Add-EdgeOSSystemImage {
 
 function Invoke-EdgeOSSSHSetCommand {
     param (
-        [Parameter(Mandatory)]$Command,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+        [Parameter(Mandatory,ValueFromPipeline)]$Command,
+        [Parameter(Mandatory)]$SSHSession
     )
-    process {
+    begin {
         $CommandToExecute = @"
 session_env=`$(cli-shell-api getSessionEnv `$PPID)
 eval `$session_env
 cli-shell-api setupSession
+@"
+    }
+    process {
+        $CommandToExecute += @"
 /opt/vyatta/sbin/my_$Command
+@"    
+    }
+    end {
+        $CommandToExecute += @"
 /opt/vyatta/sbin/my_commit
 cli-shell-api teardownSession
 "@ -split "`r`n" -join ";"
-    
         Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
     }
 }
