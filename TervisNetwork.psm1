@@ -200,18 +200,6 @@ channel-group $VPCPortChannelNumber mode active
 
 }
 
-function Invoke-EdgeOSProvision {
-    $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ubnt, (
-        "ubnt" | ConvertTo-SecureString -AsPlainText -Force
-    )
-    
-    Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
-    $SSHSession = New-SSHSession -ComputerName 192.168.1.1 -Credential $Credential -AcceptKey
-    Invoke-SSHCommand -Command "hostname" -SessionId 0
-    Invoke-SSHCommand -Command "/opt/vyatta/bin/vyatta-op-cmd-wrapper show version" -SessionId 0
-
-}
-
 function Get-EdgeOSVersion {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
@@ -459,7 +447,7 @@ function Get-NetworkNode {
         [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName,
         [Switch]$UseDefaultCredential
     )
-    $Parameters = $PSBoundParameters | ConvertFrom-PSBoundParameters -ExcludeProperty $UseDefaultCredential -AsHashTable
+    $Parameters = $PSBoundParameters | ConvertFrom-PSBoundParameters -ExcludeProperty UseDefaultCredential -AsHashTable
     $NetworkNode = Get-NetworkNodeDefinition @Parameters
     $NetworkNode | 
     Add-NetworkNodeCustomProperites -UseDefaultCredential:$UseDefaultCredential
@@ -498,10 +486,12 @@ function Invoke-NetworkNodeProvision {
     [CmdletBinding(SupportsShouldProcess)]
     param (
         [Parameter(Mandatory,ParameterSetName="HardwareSerialNumber")]$HardwareSerialNumber,
-        [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName
+        [Parameter(Mandatory,ParameterSetName="ComputerName")]$ComputerName,
+        [Switch]$UseDefaultCredential
     )
     Get-SSHTrustedHost | where sshhost -eq 192.168.1.1 | Remove-SSHTrustedHost
-    $NetworkNode = Get-NetworkNode @PSBoundParameters
+    $Parameters = $PSBoundParameters | ConvertFrom-PSBoundParameters -ExcludeProperty WhatIf -AsHashTable
+    $NetworkNode = Get-NetworkNode @Parameters
     if ($NetworkNode.OperatingSystemName -in "EdgeOS","VyOS") {
         #$NetworkNode | Set-EedgeOSUser
         $NetworkNode | Set-EdgeOSSystemHostName
