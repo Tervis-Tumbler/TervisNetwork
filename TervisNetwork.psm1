@@ -394,6 +394,16 @@ function Invoke-EdgeOSSSHOperationalModeCommand {
     }   
 }
 
+function Set-EdgeOSConfigurationToDefault {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        Invoke-EdgeOSSSHCommand -Command "sudo cp /opt/vyatta/etc/config.boot.default /config/config.boot" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHCommand -Command "sudo reboot" -SSHSession $SSHSession
+    }
+}
+
 function Invoke-EdgeOSSSHCommand {
     [CmdletBinding(SupportsShouldProcess)]
     param (
@@ -402,6 +412,9 @@ function Invoke-EdgeOSSSHCommand {
     )
     process {
         if ($PSCmdlet.ShouldProcess($SSHSession.Host)) {
+            if ($VerbosePreference -ne "SilentlyContinue") {
+                $Command
+            }
             Invoke-SSHCommand -Command $Command -SSHSession $SSHSession
         } else {
             $Command
