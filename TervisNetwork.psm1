@@ -867,7 +867,11 @@ function Get-EdgeOSNextAvailableNATRuleNumber {
         Sort-Object -Unique -Descending |
         Select-Object -First 1
 
-        $LastNatRuleNumberUsed + 1
+        if ($LastNatRuleNumberUsed) {
+            $LastNatRuleNumberUsed + 1
+        } else {
+            5000
+        }
     }
 }
 
