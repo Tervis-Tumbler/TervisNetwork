@@ -1191,7 +1191,7 @@ set firewall group network-group LAN_NETS network 10.172.0.0/16
 set firewall group network-group LAN_NETS network 10.200.0.0/24
 set firewall group network-group LAN_NETS network 10.200.2.0/24
 set firewall receive-redirects disable
-set firewall send-redirects enable
+set firewall send-redirects disable
 set firewall source-validation disable
 set firewall syn-cookies enable
 set system conntrack expect-table-size 4096

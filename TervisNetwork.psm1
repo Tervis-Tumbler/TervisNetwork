@@ -535,7 +535,7 @@ function Invoke-NetworkNodeProvision {
         #where {$_.TunnelMemberDefinition} | 
         #Invoke-EdgeOSTunnelProvision
 
-        #Add-EdgeOSSystemImage -ImagePath https://dl.ubnt.com/firmwares/edgemax/v1.9.7/ER-e50.v1.9.7+hotfix.3.5013617.tar
+        #Add-EdgeOSSystemImage -ImagePath https://dl.ubnt.com/firmwares/edgemax/v1.10.x/ER-e1000.v1.10.0.5056262.tar
 
         $NetworkNode.AdditionalCommands -split "`r`n" |
         Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $NetworkNode.SSHSession
