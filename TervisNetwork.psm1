@@ -310,18 +310,21 @@ function Invoke-EdgeOSSSHSetCommand {
 session_env=`$(cli-shell-api getSessionEnv `$PPID)
 eval `$session_env
 cli-shell-api setupSession
-@"
+
+"@
     }
     process {
         $CommandToExecute += @"
 /opt/vyatta/sbin/my_$Command
-@"    
+
+"@    
     }
     end {
         $CommandToExecute += @"
 /opt/vyatta/sbin/my_commit
 cli-shell-api teardownSession
-"@ -split "`r`n" -join ";"
+"@
+        $CommandToExecute = $CommandToExecute -split "`r`n" -join ";"
         Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
     }
 }
@@ -500,7 +503,7 @@ function Add-NetworkNodeCustomProperites {
                 $SSHSession
             } else {
                 if ($SSHSession) { $SSHSession | Remove-SSHSession | Out-Null }
-                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.Credential -AcceptKey
+                New-SSHSession -ComputerName $This.ManagementIPAddress -Credential $This.Credential -AcceptKey -ConnectionTimeout 60
             }
         } -PassThru 
     }
@@ -857,7 +860,7 @@ function Get-EdgeOSNextAvailableNATRuleNumber {
     )
     process {
         $Results = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession | 
-        Select-Object -ExpandProperty Output
+        Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
         
         [int]$LastNatRuleNumberUsed = $Results -split "`r`n" | 
         Select-StringBetween -After "set service nat rule " -Before " " |
