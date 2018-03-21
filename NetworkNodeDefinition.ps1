@@ -419,184 +419,66 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         VIFVlan = 72
         Address = "10.172.72.5/22"
         Description = "WifiDataInternetOnly"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 2
+        Address = "10.2.2.10/24"
+        Description = "RouterOnly"
     }
 },
 [PSCustomObject][Ordered]@{
+    TemplateName = "INF-ERWAN"
     ComputerName = "INF-ERWAN02"
-    OperatingSystemName = "EdgeOS"
     ManagementIPAddress = "INF-ERWAN02"
-    PasswordID = 5189
     InterfaceDefinition = [PSCustomObject][Ordered]@{
-        Name = "eth0"
-        Address = "192.168.1.1/24"
-        LoadBalanceIngressTrafficDestinedToWAN = $True
-    },
-    [PSCustomObject][Ordered]@{
-        Name = "eth3"
+        Name = "eth1"
         Description = "Fios25"
         VIFVlan = 21
         Address = "96.243.198.61/24"
-        UseForWANLoadBalancing = $True
-        Weight = 50
-        VRRPGroup = [PSCustomObject][Ordered]@{
-            Number = 100
-            VIP = "96.243.198.59/24"
-            AuthenticationPasswordStateEntry = 5367
-        }
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth3"
+        Name = "eth1"
         Description = "Cogent"
         VIFVlan = 28
         Address = "38.95.4.140/26"
-        UseForWANLoadBalancing = $True
-        Weight = 30
-        VRRPGroup = [PSCustomObject][Ordered]@{
-            Number = 200
-            VIP = "38.95.4.143/26"
-            AuthenticationPasswordStateEntry = 5367
-        }
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth3"
+        Name = "eth1"
         Description = "Fios150"
         VIFVlan = 20
         Address = "100.3.102.6/24"
-        UseForWANLoadBalancing = $True
-        Weight = 50
-        VRRPGroup = [PSCustomObject][Ordered]@{
-            Number = 300
-            VIP = "100.3.102.16/24"
-            AuthenticationPasswordStateEntry = 5367
-        }
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth4"
+        Name = "eth2"
         VIFVlan = 48
         Description = "Infrastructure"
         Address = "10.172.48.150/24"
-        LoadBalanceIngressTrafficDestinedToWAN = $True
-        VRRPGroup = [PSCustomObject][Ordered]@{
-            Number = 400
-            VIP = "10.172.48.77/24"
-            AuthenticationPasswordStateEntry = 5367
-        }
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth4"
+        Name = "eth2"
         VIFVlan = 24
         Address = "10.172.28.55/21"
         Description = "StandardEndpoints"
-        LoadBalanceIngressTrafficDestinedToWAN = $True
-        VRRPGroup = [PSCustomObject][Ordered]@{
-            Number = 500
-            VIP = "10.172.26.23/21"
-            AuthenticationPasswordStateEntry = 5367
-        }
     },
     [PSCustomObject][Ordered]@{
-        Name = "eth4"
+        Name = "eth2"
         VIFVlan = 12
         Address = "10.172.14.39/22"
         Description = "WifiData"
-        LoadBalanceIngressTrafficDestinedToWAN = $True
-        VRRPGroup = [PSCustomObject][Ordered]@{
-            Number = 600
-            VIP = "10.172.12.191/22"
-            AuthenticationPasswordStateEntry = 5367
-        }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 72
+        Address = "10.172.72.4/22"
+        Description = "WifiDataInternetOnly"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 2
+        Address = "10.2.2.11/24"
+        Description = "RouterOnly"
     }
-    StaticRoute = [PSCustomObject][Ordered]@{
-        Address = "10.4.0.0/16"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.128.1.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.2.2.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.200.0.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.54.0.0/19"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.128.0.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.32.0.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.64.0.0/16"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.200.2.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.55.1.0/24"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "10.172.0.0/16"
-        NextHop = "10.172.48.250"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "0.0.0.0/0"
-        NextHop = "38.95.4.129"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "0.0.0.0/0"
-        NextHop = "96.243.198.1"
-    },
-    [PSCustomObject][Ordered]@{
-        Address = "0.0.0.0/0"
-        NextHop = "100.3.102.1"
-    }
-    AdditionalCommands = @"
-set firewall all-ping enable
-set firewall broadcast-ping disable
-set firewall ipv6-receive-redirects disable
-set firewall ipv6-src-route disable
-set firewall ip-src-route disable
-set firewall log-martians disable
-set firewall group network-group LAN_NETS network 10.2.2.0/24
-set firewall group network-group LAN_NETS network 10.4.0.0/16
-set firewall group network-group LAN_NETS network 10.16.0.0/24
-set firewall group network-group LAN_NETS network 10.32.0.0/24
-set firewall group network-group LAN_NETS network 10.40.0.0/24
-set firewall group network-group LAN_NETS network 10.54.0.0/19
-set firewall group network-group LAN_NETS network 10.55.1.0/24
-set firewall group network-group LAN_NETS network 10.64.0.0/16
-set firewall group network-group LAN_NETS network 10.92.2.0/24
-set firewall group network-group LAN_NETS network 10.128.0.0/24
-set firewall group network-group LAN_NETS network 10.128.1.0/24
-set firewall group network-group LAN_NETS network 10.172.0.0/16
-set firewall group network-group LAN_NETS network 10.200.0.0/24
-set firewall group network-group LAN_NETS network 10.200.2.0/24
-set firewall receive-redirects disable
-set firewall send-redirects enable
-set firewall source-validation disable
-set firewall syn-cookies enable
-set system conntrack expect-table-size 4096
-set system conntrack hash-size 4096
-set system conntrack table-size 32768
-set system conntrack tcp half-open-connections 512
-set system conntrack tcp loose enable
-set system conntrack tcp max-retrans 3
-set system name-server 8.8.8.8
-set system offload ipv4 forwarding enable
-set system offload ipv4 vlan enable
-"@
 },
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-VyOS01"
@@ -1129,7 +1011,19 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             VIP = "10.172.72.6/22"
             AuthenticationPasswordStateEntry = 5367
         }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 2
+        Description = "RouterOnly"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 8
+            VIP = "10.2.2.12/24"
+            AuthenticationPasswordStateEntry = 5367
+        }
     }
+
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "10.4.0.0/16"
         NextHop = "10.172.48.250"
@@ -1220,6 +1114,7 @@ set system conntrack tcp max-retrans 3
 set system name-server 8.8.8.8
 set system offload ipv4 forwarding enable
 set system offload ipv4 vlan enable
+set load-balance group G interface eth1.28 failover-only
 "@
 }
 

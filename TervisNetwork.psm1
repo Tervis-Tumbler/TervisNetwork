@@ -872,10 +872,10 @@ function Remove-EdgeOSNATRulesThatAlreadyExist {
         $NewNATRuleCommand = $Command |
         Select-StringBetween -After "set service nat rule .... " -Before "$"
 
-        if (-not $NewNATRuleCommand) {
+        if (-not $NewNATRuleCommand -or $NewNATRuleCommand -match [Regex]::Escape("type masquerade")) {
             $Command
         } else {
-            $Matches = $ExistingNATRules -match $NewNATRuleCommand
+            $Matches = $ExistingNATRules -match [Regex]::Escape($NewNATRuleCommand)
             if (-not $Matches) {
                 $Command
             }
