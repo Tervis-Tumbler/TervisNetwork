@@ -847,10 +847,39 @@ function Set-EdgeOSLoadBalancedWanInterface {
 
         $Commands = @()
         $Commands += New-EdgeOSFirewallLoadBalanceStanza
-        $Commands += New-EdgeOSLoadBalancedWanInterfaceStanza -NatRuleNumber $NextAvailableNATRuleNumber -InterfaceName $InterfaceDefinition.Name -Weight $InterfaceDefinition.Weight -Description $InterfaceDefinition.Description -VIFVlan $InterfaceDefinition.VIFVlan
+        $LoadBalancedWanInterfaceStanzaCommands = (
+            New-EdgeOSLoadBalancedWanInterfaceStanza -NatRuleNumber $NextAvailableNATRuleNumber -InterfaceName $InterfaceDefinition.Name -Weight $InterfaceDefinition.Weight -Description $InterfaceDefinition.Description -VIFVlan $InterfaceDefinition.VIFVlan
+        ) -split"`r`n" |
+        Remove-EdgeOSNATRulesThatAlreadyExist -SSHSession $SSHSession
 
-        $Commands -split "`r`n" |
+        ($Commands -split "`r`n") + $LoadBalancedWanInterfaceStanzaCommands |
         Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
+    }
+}
+
+function Remove-EdgeOSNATRulesThatAlreadyExist {
+    param (
+        [Parameter(Mandatory,ValueFromPipeline)]$Command,
+        [Parameter(Mandatory)]$SSHSession
+    )
+    begin {
+        $ExistingNATRules = (
+            Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession | 
+            Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
+        ) -split "`r`n"
+    }
+    process {
+        $NewNATRuleCommand = $Command |
+        Select-StringBetween -After "set service nat rule .... " -Before "$"
+
+        if (-not $NewNATRuleCommand) {
+            $Command
+        } else {
+            $Matches = $ExistingNATRules -match $NewNATRuleCommand
+            if (-not $Matches) {
+                $Command
+            }
+        }
     }
 }
 

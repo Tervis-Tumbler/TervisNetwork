@@ -377,7 +377,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
 [PSCustomObject][Ordered]@{
     TemplateName = "INF-ERWAN"
     ComputerName = "INF-ERWAN01"
-    ManagementIPAddress = "192.168.1.1"
+    ManagementIPAddress = "INF-ERWAN01"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Fios25"
@@ -406,13 +406,19 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 24
         Address = "10.172.26.24/21"
-        Description = "Standard endpoints"
+        Description = "StandardEndpoints"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 12
         Address = "10.172.12.192/22"
         Description = "WifiData"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 72
+        Address = "10.172.72.5/22"
+        Description = "WifiDataInternetOnly"
     }
 },
 [PSCustomObject][Ordered]@{
@@ -480,7 +486,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Name = "eth4"
         VIFVlan = 24
         Address = "10.172.28.55/21"
-        Description = "Standard endpoints"
+        Description = "StandardEndpoints"
         LoadBalanceIngressTrafficDestinedToWAN = $True
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 500
@@ -1049,7 +1055,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Description = "Fios25"
         VIFVlan = 21
         UseForWANLoadBalancing = $True
-        Weight = 50
+        Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 1
             VIP = "96.243.198.59/24"
@@ -1061,7 +1067,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Description = "Cogent"
         VIFVlan = 28
         UseForWANLoadBalancing = $True
-        Weight = 30
+        Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 2
             VIP = "38.95.4.143/26"
@@ -1073,7 +1079,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Description = "Fios150"
         VIFVlan = 20
         UseForWANLoadBalancing = $True
-        Weight = 50
+        Weight = 100
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
             VIP = "100.3.102.16/24"
@@ -1094,7 +1100,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 24
-        Description = "Standard endpoints"
+        Description = "StandardEndpoints"
         LoadBalanceIngressTrafficDestinedToWAN = $True
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 5
@@ -1110,6 +1116,17 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 6
             VIP = "10.172.12.191/22"
+            AuthenticationPasswordStateEntry = 5367
+        }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 72
+        Description = "WifiDataInternetOnly"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 7
+            VIP = "10.172.72.6/22"
             AuthenticationPasswordStateEntry = 5367
         }
     }
