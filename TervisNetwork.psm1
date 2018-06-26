@@ -740,7 +740,8 @@ function Copy-PathToSFTPDestinationPath {
     param (
         [Parameter(Mandatory)]$Path,
         [Parameter(Mandatory)]$DestinationPath,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SFTPSession
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SFTPSession,
+        [switch]$Overwrite
     )
     $Files = Get-ChildItem -Recurse -Path $Path -File
     foreach ($File in $Files) {
@@ -752,7 +753,7 @@ function Copy-PathToSFTPDestinationPath {
         if (-not $Folder) {
             New-SFTPItem -ItemType Directory -Path $DestinationPathOfFile -SFTPSession $SFTPSession | Out-Null
         }
-        Set-SFTPFile -RemotePath $DestinationPathOfFile -LocalFile $File.FullName -SFTPSession $SFTPSession
+        Set-SFTPFile -RemotePath $DestinationPathOfFile -LocalFile $File.FullName -SFTPSession $SFTPSession -Overwrite:$Overwrite
     }
 }
 
