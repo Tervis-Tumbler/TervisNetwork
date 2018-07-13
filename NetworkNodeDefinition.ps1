@@ -1054,7 +1054,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Address = "10.64.0.0/16"
-        NextHop = "10.172.48.250"
+        NextHop = "10.2.2.1"
     },
     [PSCustomObject][Ordered]@{
         Address = "10.200.2.0/24"
@@ -1062,8 +1062,12 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Address = "10.55.1.0/24"
-        NextHop = "10.172.48.250"
+        NextHop = "10.2.2.1"
     },
+    [PSCustomObject][Ordered]@{
+        Address = "192.168.100.0/24"
+        NextHop = "10.2.2.1"
+    },    
     [PSCustomObject][Ordered]@{
         Address = "10.172.0.0/16"
         NextHop = "10.172.48.250"
@@ -1115,6 +1119,15 @@ set system name-server 8.8.8.8
 set system offload ipv4 forwarding enable
 set system offload ipv4 vlan enable
 set load-balance group G interface eth1.28 failover-only
+set service nat rule 1 description Exchange
+set service nat rule 1 destination address 203.0.113.1
+set service nat rule 1 destination port 443
+set service nat rule 1 inbound-interface eth0
+set service nat rule 1 inside-address address 192.168.1.10
+set service nat rule 1 inside-address port 443
+set service nat rule 1 log disable
+set service nat rule 1 protocol tcp
+set service nat rule 1 type destination
 "@
 }
 
@@ -1159,4 +1172,22 @@ $TunnelDefinition = [PSCustomObject][Ordered]@{
 $SystemImageDefinition = [PSCustomObject][Ordered]@{
     Version = "1.9.7+hotfix3"
     Path = "https://dl.ubnt.com/firmwares/edgemax/v1.9.7/ER-e50.v1.9.7+hotfix.3.5013617.tar"
+}
+
+$NetworkWANNAT = [PSCustomObject][Ordered]@{
+    ComputerName = "Exchange2016"
+    PrivateIPAddress = "10.172.44.103"
+    PublicIPAddress = "100.3.102.5","38.95.4.139"
+    Ports = [PSCustomObject][Ordered]@{
+        Protocl = "TCP"
+        Ports = 80,443
+    }
+
+},
+[PSCustomObject][Ordered]@{
+}
+
+$IPAddressGroup = [PSCustomObject][Ordered]@{
+    Name = "Office365ExchangeOnline"
+
 }

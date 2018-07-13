@@ -267,7 +267,7 @@ function Set-EdgeOSInterfacesEthernet {
             $SetVRRGroupCommand = "$SetInterfaceCommand vrrp vrrp-group $($VRRPGroup.Number)"
             Invoke-EdgeOSSSHSetCommand -Command "$SetVRRGroupCommand virtual-address $($VRRPGroup.VIP)" -SSHSession $SSHSession
             
-            $Credential = Get-PasswordstateCredential -PasswordID $VRRPGroup.AuthenticationPasswordStateEntry
+            $Credential = Get-PasswordstatePassword -AsCredential -ID $VRRPGroup.AuthenticationPasswordStateEntry
             $Password = $Credential.GetNetworkCredential().password
 
             "$SetVRRGroupCommand authentication type ah", 
@@ -463,7 +463,7 @@ function Add-NetworkNodeOperatingSystemTemplateCustomProperites {
     process {
         $OperatingSystemTemplate |
         Add-Member -MemberType ScriptProperty -Name Credential -Force -Value {
-            Get-PasswordstateCredential -PasswordID $this.DefaultCredential
+            Get-PasswordstatePassword -AsCredential -ID $this.DefaultCredential
         } -PassThru
     }
 }
@@ -494,7 +494,7 @@ function Add-NetworkNodeCustomProperites {
             if ($UseDefaultCredential) {
                 $This.OperatingSystemTemplate.Credential
             } else {
-                Get-PasswordstateCredential -PasswordID $This.PasswordID
+                Get-PasswordstatePassword -AsCredential -ID $This.PasswordID
             }
         } -PassThru |
         Add-Member -MemberType ScriptProperty -Name SSHSession -Force -Value {
