@@ -40,7 +40,7 @@
 },
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-ERWAN02"
-    HardwareSerialNumber = "1721k788a204095a9"
+    HardwareSerialNumber = "788A204095A9"
 }
 
 $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
@@ -386,9 +386,9 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Description = "Cogent"
-        VIFVlan = 28
-        Address = "38.95.4.141/26"
+        Description = "Comcast-Fiber"
+        VIFVlan = 23
+        Address = "50.239.201.212/29"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
@@ -439,9 +439,9 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Description = "Cogent"
-        VIFVlan = 28
-        Address = "38.95.4.140/26"
+        Description = "Comcast-Fiber"
+        VIFVlan = 23
+        Address = "50.239.201.213/29"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
@@ -946,13 +946,13 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Description = "Cogent"
-        VIFVlan = 28
+        Description = "Comcast-Fiber"
+        VIFVlan = 23
         UseForWANLoadBalancing = $True
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 2
-            VIP = "38.95.4.143/26"
+            VIP = "50.239.201.214/29"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1074,7 +1074,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
-        NextHop = "38.95.4.129"
+        NextHop = "50.239.201.209"
     },
     [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
@@ -1118,16 +1118,6 @@ set system conntrack tcp max-retrans 3
 set system name-server 8.8.8.8
 set system offload ipv4 forwarding enable
 set system offload ipv4 vlan enable
-set load-balance group G interface eth1.28 failover-only
-set service nat rule 1 description Exchange
-set service nat rule 1 destination address 203.0.113.1
-set service nat rule 1 destination port 443
-set service nat rule 1 inbound-interface eth0
-set service nat rule 1 inside-address address 192.168.1.10
-set service nat rule 1 inside-address port 443
-set service nat rule 1 log disable
-set service nat rule 1 protocol tcp
-set service nat rule 1 type destination
 "@
 }
 
