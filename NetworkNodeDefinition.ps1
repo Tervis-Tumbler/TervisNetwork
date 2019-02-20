@@ -386,7 +386,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Description = "Comcast-Fiber"
+        Description = "ComcastFiber"
         VIFVlan = 23
         Address = "50.239.201.212/29"
     },
@@ -439,7 +439,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Description = "Comcast-Fiber"
+        Description = "ComcastFiber"
         VIFVlan = 23
         Address = "50.239.201.213/29"
     },
@@ -946,7 +946,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Description = "Comcast-Fiber"
+        Description = "ComcastFiber"
         VIFVlan = 23
         UseForWANLoadBalancing = $True
         Weight = 0
