@@ -41,6 +41,10 @@
 [PSCustomObject][Ordered]@{
     ComputerName = "INF-ERWAN02"
     HardwareSerialNumber = "788A204095A9"
+},
+[PSCustomObject][Ordered]@{
+    ComputerName = "INF-EdgeRouterTest"
+    HardwareSerialNumber = "F09FC2DF02B2"
 }
 
 $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
@@ -478,6 +482,29 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         VIFVlan = 2
         Address = "10.2.2.11/24"
         Description = "RouterOnly"
+    }
+},
+[PSCustomObject][Ordered]@{
+    TemplateName = "INF-EdgerouterUB"
+    ComputerName = "INF-EdgeRouterTest"
+    OperatingSystemName = "EdgeOS"
+    ManagementIPAddress = "192.168.1.1"
+    InterfaceDefinition = [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Description = "Inside"
+        Address = "10.0.0.1/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Description = "Fios150"
+        VIFVlan = 20
+        Address = "100.3.102.27/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Description = "Comcast-Coax"
+        VIFVlan = 22
+        Address = "96.71.118.161/27"
     }
 },
 [PSCustomObject][Ordered]@{
@@ -1092,15 +1119,11 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         NextHop = "100.3.102.1"
     }#>
 
-    PolicyRoute = [PSCustomObject][Ordered]@{
+    PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnlyPolicy"
         SourceAddress = "10.172.72.0/22"
-        Address = "0.0.0.0/0"
-        NextHop = "100.3.102.1"
-        TableNumber = "11"
-        PolicyRuleNumber = "11"
-    }
-    
+        NextHop = "100.3.102.1"      
+    }   
     
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -1136,6 +1159,74 @@ set system conntrack tcp max-retrans 3
 set system name-server 8.8.8.8
 set system offload ipv4 forwarding enable
 set system offload ipv4 vlan enable
+"@
+},
+[PSCustomObject][Ordered]@{
+    Name = "INF-EdgerouterUB"
+    OperatingSystemName = "EdgeOS"
+    PasswordID = 5189
+    InterfaceDefinition = [PSCustomObject][Ordered]@{
+        Name = "eth0"
+        Address = "192.168.1.1/24"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Address = "10.0.0.1/24"
+        UsePolicyRouteForTrafficDestinedToWAN = $True
+        PolicyName = "InetrnetOnlyWiFi"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Description = "Fios150"
+        VIFVlan = 20
+        UseForWANLoadBalancing = $True
+        Weight = 100
+     },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Description = "Comcast-Coax"
+        VIFVlan = 22
+        UseForWANLoadBalancing = $True
+        Weight = 0
+     }
+     
+    
+    StaticRoute = [PSCustomObject][Ordered]@{
+        Address = "0.0.0.0/0"
+        NextHop = "100.3.102.1"
+    },
+    [PSCustomObject][Ordered]@{
+       Address = "0.0.0.0/0"
+        NextHop = "96.71.118.190"
+    }
+   
+    PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
+        Name = "InetrnetOnlyWiFi"
+        SourceAddress = "10.0.0.2"
+        NextHop = "100.3.102.1"
+    }    
+
+    AdditionalCommands = @"
+set firewall all-ping enable
+set firewall broadcast-ping disable
+set firewall ipv6-receive-redirects disable
+set firewall ipv6-src-route disable
+set firewall ip-src-route disable
+set firewall log-martians disable
+set firewall group network-group LAN_NETS network 192.168.1.0/24
+set firewall receive-redirects disable
+set firewall send-redirects disable
+set firewall source-validation disable
+set firewall syn-cookies enable
+set system conntrack expect-table-size 4096
+set system conntrack hash-size 4096
+set system conntrack table-size 32768
+set system conntrack tcp half-open-connections 512
+set system conntrack tcp loose enable
+set system conntrack tcp max-retrans 3
+set system name-server 8.8.8.8
+set system offload hwnat enable
 "@
 }
 

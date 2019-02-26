@@ -290,32 +290,22 @@ function Set-EdgeOSProtocolsStaticRoute {
     }
 }
 
-<#function Set-EdgeOSProtocolsStaticTable {
-    param (
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$TableNumber      
-    )
-    process {
-        Invoke-EdgeOSSSHConfigureModeCommand -Command "set protocols static table $TableNumber route $Address next-hop $NextHop" -SSHSession $SSHSession
-    }
-}
-#>
-function Set-EdgeOSPolicyRoute {
+function Set-EdgeOSPolicyBasedRouteDefaultRouteSourceAddressBased {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SourceAddress,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$TableNumber,  
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PolicyRuleNumber,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop  
     )
     process {
-        Invoke-EdgeOSSSHConfigureModeCommand -Command "set protocols static table $TableNumber route $Address next-hop $NextHop" -SSHSession $SSHSession
-        Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall modify $Name rule $PolicyRuleNumber modify table $TableNumber" -SSHSession $SSHSession
-        Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall modify $Name rule $PolicyRuleNumber source address $SourceAddress" -SSHSession $SSHSession
+        $NextAvailableStaticTablePolicyRuleNumber = Get-EdgeOSNextAvailableStaticTablePolicyRuleNumber -SSHSession $SSHSession
+@"
+set protocols static table $NextAvailableStaticTablePolicyRuleNumber route 0.0.0.0/0 next-hop $NextHop
+set firewall modify $Name rule $NextAvailableStaticTablePolicyRuleNumber modify table $NextAvailableStaticTablePolicyRuleNumber
+set firewall modify $Name rule $NextAvailableStaticTablePolicyRuleNumber source address $SourceAddress 
+"@ -split "`r`n" | 
+    Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
+
     }
 }
 
@@ -558,16 +548,11 @@ function Invoke-NetworkNodeProvision {
         where {$_.StaticRoute} | 
         Select -ExpandProperty StaticRoute |
         Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
-
-        <# $NetWorkNode | 
-        where {$_.StaticTable} | 
-        Select -ExpandProperty StaticTable |
-        Set-EdgeOSProtocolsStaticTable  -SSHSession $NetworkNode.SSHSession#>
-
+      
         $NetWorkNode | 
-        where {$_.PolicyRoute} | 
-        Select -ExpandProperty PolicyRoute |
-        Set-EdgeOSPolicyRoute -SSHSession $NetworkNode.SSHSession
+        where {$_.PolicyBasedRouteDefaultRouteSourceAddressBased} | 
+        Select -ExpandProperty PolicyBasedRouteDefaultRouteSourceAddressBased |
+        Set-EdgeOSPolicyBasedRouteDefaultRouteSourceAddressBased -SSHSession $NetworkNode.SSHSession
 
         
         #$NetworkNode | 
@@ -964,6 +949,28 @@ function Get-EdgeOSNextAvailableNATRuleNumber {
         }
     }
 }
+
+function Get-EdgeOSNextAvailableStaticTablePolicyRuleNumber {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+    )
+    process {
+        $Results = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "static table"' -SSHSession $SSHSession | 
+        Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
+        
+        [int]$LastStaticTableNumberUsed = $Results -split "`r`n" | 
+        Select-StringBetween -After "set protocols static table " -Before " " |
+        Sort-Object -Unique -Descending |
+        Select-Object -First 1
+
+        if ($LastStaticTableNumberUsed) {
+            $LastStaticTableNumberUsed + 1
+        } else {
+            11
+        }
+    }
+}
+
 
 function Set-EdgeOSLoadBalancedLanInterface {
     param (
