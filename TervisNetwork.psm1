@@ -290,6 +290,35 @@ function Set-EdgeOSProtocolsStaticRoute {
     }
 }
 
+<#function Set-EdgeOSProtocolsStaticTable {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$TableNumber      
+    )
+    process {
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set protocols static table $TableNumber route $Address next-hop $NextHop" -SSHSession $SSHSession
+    }
+}
+#>
+function Set-EdgeOSPolicyRoute {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SourceAddress,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$TableNumber,  
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PolicyRuleNumber,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Address,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop  
+    )
+    process {
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set protocols static table $TableNumber route $Address next-hop $NextHop" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall modify $Name rule $PolicyRuleNumber modify table $TableNumber" -SSHSession $SSHSession
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall modify $Name rule $PolicyRuleNumber source address $SourceAddress" -SSHSession $SSHSession
+    }
+}
+
 function Add-EdgeOSSystemImage {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
@@ -529,6 +558,16 @@ function Invoke-NetworkNodeProvision {
         where {$_.StaticRoute} | 
         Select -ExpandProperty StaticRoute |
         Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
+
+        <# $NetWorkNode | 
+        where {$_.StaticTable} | 
+        Select -ExpandProperty StaticTable |
+        Set-EdgeOSProtocolsStaticTable  -SSHSession $NetworkNode.SSHSession#>
+
+        $NetWorkNode | 
+        where {$_.PolicyRoute} | 
+        Select -ExpandProperty PolicyRoute |
+        Set-EdgeOSPolicyRoute -SSHSession $NetworkNode.SSHSession
 
         
         #$NetworkNode | 
@@ -804,6 +843,15 @@ set firewall modify balance rule 10 action modify
 set firewall modify balance rule 10 modify table main
 set firewall modify balance rule 20 action modify
 set firewall modify balance rule 20 modify lb-group G
+set firewall modify balance rule 30 action modify
+set firewall modify balance rule 30 destination group address-group ADDRv4_eth1.20
+set firewall modify balance rule 30 modify table main
+set firewall modify balance rule 40 action modify
+set firewall modify balance rule 40 destination group address-group ADDRv4_eth1.21
+set firewall modify balance rule 40 modify table main
+set firewall modify balance rule 50 action modify
+set firewall modify balance rule 50 destination group address-group ADDRv4_eth1.23
+set firewall modify balance rule 50 modify table main
 set firewall name WAN_IN default-action drop
 set firewall name WAN_IN description 'WAN to internal'
 set firewall name WAN_IN rule 10 action accept
@@ -834,6 +882,18 @@ function New-EdgeOSLoadBalancedLanInterfaceStanza {
     $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
 @"
 set interfaces ethernet $EthernetInterfaceStanza firewall in modify balance
+"@
+}
+
+function New-EdgeOSPolicyBaseRouting {
+    param (
+        $InterfaceName,
+        $VIFVlan,
+        $PolicyName
+    )
+    $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
+@"
+set interfaces ethernet $EthernetInterfaceStanza firewall in modify $PolicyName
 "@
 }
 
@@ -919,6 +979,20 @@ function Set-EdgeOSLoadBalancedLanInterface {
     }
 }
 
+function Set-EdgeOSPolicyBaseRouting {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceDefinition
+    )
+    process {
+        $Commands = @()
+        $Commands += New-EdgeOSPolicyBaseRouting -InterfaceName $InterfaceDefinition.Name -VIFVlan $InterfaceDefinition.VIFVlan -PolicyName $InterfaceDefinition.PolicyName
+
+        $Commands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
+    }
+}
+
 
 function Invoke-EdgeOSInterfaceUseProvision {
     param (
@@ -937,6 +1011,11 @@ function Invoke-EdgeOSInterfaceUseProvision {
         foreach {
             Set-EdgeOSLoadBalancedLanInterface -SSHSession $SSHSession -InterfaceDefinition $_
         }
+        $InterfaceDefinition |
+        Where {$_.UsePolicyRouteForTrafficDestinedToWAN} |
+        foreach {
+            Set-EdgeOSPolicyBaseRouting -SSHSession $SSHSession -InterfaceDefinition $_
+        }    
     }
 }
 

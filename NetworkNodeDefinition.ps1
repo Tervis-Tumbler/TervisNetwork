@@ -1005,7 +1005,8 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 72
         Description = "WifiDataInternetOnly"
-        LoadBalanceIngressTrafficDestinedToWAN = $True
+        UsePolicyRouteForTrafficDestinedToWAN = $True
+        PolicyName = "WifiDataInternetOnlyPolicy"
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 7
             VIP = "10.172.72.6/22"
@@ -1084,6 +1085,23 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
         NextHop = "100.3.102.1"
     }
+
+   <# StaticTable = [PSCustomObject][Ordered]@{
+        Address = "0.0.0.0/0"
+        TableNumber = "11"
+        NextHop = "100.3.102.1"
+    }#>
+
+    PolicyRoute = [PSCustomObject][Ordered]@{
+        Name = "WifiDataInternetOnlyPolicy"
+        SourceAddress = "10.172.72.0/22"
+        Address = "0.0.0.0/0"
+        NextHop = "100.3.102.1"
+        TableNumber = "11"
+        PolicyRuleNumber = "11"
+    }
+    
+    
     AdditionalCommands = @"
 set firewall all-ping enable
 set firewall broadcast-ping disable
