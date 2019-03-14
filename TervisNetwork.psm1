@@ -8,6 +8,16 @@ function Install-TervisNetwork {
     Install-Module -Name Posh-SSH -Scope CurrentUser
 }
 
+function Get-TervisNetworkSubnet {
+    $DHCPScopes = Get-TervisDhcpServerv4Scope
+    $DHCPScopes |
+    Add-Member -MemberType ScriptProperty -Name NetworkAddress -Value {$This.ScopeID.IPAddressToString} -PassThru -Force |
+    Add-Member -MemberType ScriptProperty -Name MaskLengthNumberOfBits -Value {$This.SubNetMask.IPAddressToString | Convert-SubnetMaskToCidr } -PassThru -Force |
+    Add-Member -MemberType ScriptProperty -Name CIDR -Value {"$($This.NetworkAddress)/$($This.MaskLengthNumberOfBits)" } -PassThru -Force |
+    Select-Object -Property Name, Vlan, Environment, NetworkAddress, SubNetMask, MaskLengthNumberOfBits, CIDR
+}
+
+
 #$SSHSession = New-SSHSession -ComputerName $NXOSSwitches -Credential (get-credential)
 ##Does not work though it probably should
 ##$Sessions | Invoke-SSHCommand -Command "show version"
