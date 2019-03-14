@@ -1297,3 +1297,10 @@ function Join-Object
         }
     }
 }
+
+function Get-TervisNetworkSubnetAsLinuxRouteCommand {
+    Get-TervisNetworkSubnet |
+    % {
+        "route add -net $($_.NetworkAddress) netmask $($_.SubnetMask) gw 10.172.44.250 dev ztzlgcetqx"
+    }
+}
