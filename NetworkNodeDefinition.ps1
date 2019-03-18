@@ -499,12 +499,20 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Description = "Fios150"
         VIFVlan = 20
         Address = "100.3.102.27/24"
+        Address2 = "100.3.102.29/24"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
         Description = "Comcast-Coax"
         VIFVlan = 22
         Address = "96.71.118.161/27"
+        Address2 = "96.71.118.165/27"
+        
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth3"
+        Description = "DMZ"
+        Address = "192.168.2.1/24"
     }
 },
 [PSCustomObject][Ordered]@{
@@ -1174,7 +1182,7 @@ set system offload ipv4 vlan enable
         Name = "eth1"
         Address = "10.0.0.1/24"
         UsePolicyRouteForTrafficDestinedToWAN = $True
-        PolicyName = "InetrnetOnlyWiFi"
+        PolicyName = "InternetOnlyWiFi"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -1182,6 +1190,7 @@ set system offload ipv4 vlan enable
         VIFVlan = 20
         UseForWANLoadBalancing = $True
         Weight = 100
+        UseForDestinationNat = $True
      },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -1189,7 +1198,12 @@ set system offload ipv4 vlan enable
         VIFVlan = 22
         UseForWANLoadBalancing = $True
         Weight = 0
-     }
+    },
+    [PSCustomObject][Ordered]@{
+       Name = "eth3"
+       Address = "192.168.2.1/24"
+       LoadBalanceIngressTrafficDestinedToWAN= $True
+   }
      
     
     StaticRoute = [PSCustomObject][Ordered]@{
@@ -1202,10 +1216,28 @@ set system offload ipv4 vlan enable
     }
    
     PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
-        Name = "InetrnetOnlyWiFi"
+        Name = "InternetOnlyWiFi"
         SourceAddress = "10.0.0.2"
         NextHop = "100.3.102.1"
-    }    
+    } 
+    
+    NetworkWANNAT = [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.20"
+        Protocol = "tcp"
+        Port = "3389"
+        Description = "RDP-Fios150"
+        PrivateIPAddress = "192.168.2.2"
+        PublicIPAddress = "100.3.102.29/24"
+
+        },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.22"
+        Protocol = "tcp"
+        Port = "3389"
+        Description = "RDP-ComcastCoax"
+        PrivateIPAddress = "192.168.2.2"
+        PublicIPAddress = "96.71.118.165/27"
+        }
 
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -1215,6 +1247,7 @@ set firewall ipv6-src-route disable
 set firewall ip-src-route disable
 set firewall log-martians disable
 set firewall group network-group LAN_NETS network 192.168.1.0/24
+set firewall group network-group LAN_NETS network 192.168.2.0/24
 set firewall receive-redirects disable
 set firewall send-redirects disable
 set firewall source-validation disable
