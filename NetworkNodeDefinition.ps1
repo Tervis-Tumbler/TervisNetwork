@@ -499,15 +499,12 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Description = "Fios150"
         VIFVlan = 20
         Address = "100.3.102.27/24"
-        Address2 = "100.3.102.29/24"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
         Description = "Comcast-Coax"
         VIFVlan = 22
         Address = "96.71.118.161/27"
-        Address2 = "96.71.118.165/27"
-        
     },
     [PSCustomObject][Ordered]@{
         Name = "eth3"
@@ -1222,19 +1219,21 @@ set system offload ipv4 vlan enable
     } 
     
     NetworkWANNAT = [PSCustomObject][Ordered]@{
-        InboundInterface = "eth2.20"
+        InterfaceName = "eth2"
+        VIFVlan = "20"
         Protocol = "tcp"
         Port = "3389"
-        Description = "RDP-Fios150"
+        Description = "RDP1-Fios150"
         PrivateIPAddress = "192.168.2.2"
         PublicIPAddress = "100.3.102.29/24"
 
         },
         [PSCustomObject][Ordered]@{
-        InboundInterface = "eth2.22"
+        InterfaceName = "eth2"
+        VIFVlan = "22"
         Protocol = "tcp"
         Port = "3389"
-        Description = "RDP-ComcastCoax"
+        Description = "RDP1-ComcastCoax"
         PrivateIPAddress = "192.168.2.2"
         PublicIPAddress = "96.71.118.165/27"
         }

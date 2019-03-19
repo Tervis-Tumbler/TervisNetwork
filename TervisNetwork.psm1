@@ -256,11 +256,7 @@ function Set-EdgeOSInterfacesEthernet {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
         [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="NoVIFVlan")]
         $Address,
-
-        [Parameter(ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
-        [Parameter(ValueFromPipelineByPropertyName,ParameterSetName="NoVIFVlan")]
-        $Address2,
-        
+       
         [Parameter(ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
         [Parameter(ValueFromPipelineByPropertyName,ParameterSetName="NoVIFVlan")]
         $Description,
@@ -273,9 +269,7 @@ function Set-EdgeOSInterfacesEthernet {
         $SetInterfaceCommand = "set interfaces ethernet $Name$(if($VIFVlan){" vif $VIFVlan"})"
 
         Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand address $Address" -SSHSession $SSHSession
-        if ($Address2) {
-            Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand address $Address2" -SSHSession $SSHSession
-            }
+        
         if ($Description) {
             Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand description $Description" -SSHSession $SSHSession
         }
@@ -333,10 +327,31 @@ set firewall modify $Name rule $NextAvailableStaticTablePolicyRuleNumber source 
     }
 }
 
+function Set-EdgeOSExtraInterfaceIPAddress {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="NoVIFVlan")]
+        $SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="NoVIFVlan")]
+        $InterfaceName,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="NoVIFVlan")]
+        $PublicIPAddress,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName,ParameterSetName="VIFVlan")]
+        $VIFVlan
+        )
+        process {
+            $SetInterfaceCommand = "set interfaces ethernet $InterfaceName$(if($VIFVlan){" vif $VIFVlan"})"
+            Invoke-EdgeOSSSHSetCommand -Command "$SetInterfaceCommand address $PublicIPAddress" -SSHSession $SSHSession
+    } 
+}
+
 function Set-EdgeOSDestinationNatRule {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InboundInterface,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InterfaceName,
+        [Parameter(ValueFromPipelineByPropertyName)]$VIFVlan,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Protocol,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Port,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Description,
@@ -346,6 +361,7 @@ function Set-EdgeOSDestinationNatRule {
     )
     process {
         $NextAvailableDestinationNatRuleNumber = Get-EdgeOSNextAvailableNATRuleNumber -SSHSession $SSHSession -Type Destination
+        $InboundInterface = "$InterfaceName$(if($VIFVlan){".$VIFVlan"})"
         $commands = ( 
 @"
 set service nat rule $NextAvailableDestinationNatRuleNumber description $Description
@@ -641,6 +657,12 @@ function Invoke-NetworkNodeProvision {
         where {$_.PolicyBasedRouteDefaultRouteSourceAddressBased} | 
         Select -ExpandProperty PolicyBasedRouteDefaultRouteSourceAddressBased |
         Set-EdgeOSPolicyBasedRouteDefaultRouteSourceAddressBased -SSHSession $NetworkNode.SSHSession
+        
+        
+        $NetworkNode | 
+        where {$_.NetworkWANNAT} | 
+        Select -ExpandProperty NetworkWANNAT | 
+        Set-EdgeOSExtraInterfaceIPAddress -SSHSession $NetworkNode.SSHSession
         
         $NetworkNode | 
         where {$_.NetworkWANNAT} | 
