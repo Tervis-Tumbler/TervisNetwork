@@ -43,9 +43,14 @@
     HardwareSerialNumber = "788A204095A9"
 },
 [PSCustomObject][Ordered]@{
-    ComputerName = "INF-EdgeRouterTest"
+    ComputerName = "INF-EdgeRouterTest1"
     HardwareSerialNumber = "F09FC2DF02B2"
+},
+[PSCustomObject][Ordered]@{
+    ComputerName = "INF-EdgeRouterTest2"
+    HardwareSerialNumber = "F09FC2DF00D2"
 }
+
 
 $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     ComputerName = "INF-EdgeRouter01"
@@ -401,6 +406,12 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Address = "100.3.102.4/24"
     },
     [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Description = "ComcastFiberDMZ"
+        VIFVlan = 29
+        Address = "50.237.206.36/27"
+    },
+    [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 48
         Description = "Infrastructure"
@@ -454,6 +465,12 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Address = "100.3.102.6/24"
     },
     [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Description = "ComcastFiberDMZ"
+        VIFVlan = 29
+        Address = "50.237.206.38/27"
+    },
+    [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 48
         Description = "Infrastructure"
@@ -486,7 +503,7 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
 },
 [PSCustomObject][Ordered]@{
     TemplateName = "INF-EdgerouterUB"
-    ComputerName = "INF-EdgeRouterTest"
+    ComputerName = "INF-EdgeRouterTest1"
     OperatingSystemName = "EdgeOS"
     ManagementIPAddress = "192.168.1.1"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
@@ -510,6 +527,34 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Name = "eth3"
         Description = "DMZ"
         Address = "192.168.2.1/24"
+    }
+},
+[PSCustomObject][Ordered]@{
+    TemplateName = "INF-EdgerouterUB"
+    ComputerName = "INF-EdgeRouterTest2"
+    OperatingSystemName = "EdgeOS"
+    ManagementIPAddress = "192.168.1.1"
+    InterfaceDefinition = [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Description = "Inside"
+        Address = "10.0.0.5/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Description = "Fios150"
+        VIFVlan = 20
+        Address = "100.3.102.24/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        Description = "Comcast-Coax"
+        VIFVlan = 22
+        Address = "96.71.118.162/27"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth3"
+        Description = "DMZ"
+        Address = "192.168.2.5/24"
     }
 },
 [PSCustomObject][Ordered]@{
@@ -990,6 +1035,17 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
+        Description = "ComcastFiberDMZ"
+        VIFVlan = 29
+        UseAsDMZInterface = $True
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 9
+            VIP = "50.237.206.60/27"
+            AuthenticationPasswordStateEntry = 5367
+        }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth1"
         Description = "Fios150"
         VIFVlan = 20
         UseForWANLoadBalancing = $True
@@ -1118,12 +1174,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         NextHop = "100.3.102.1"
     }
 
-   <# StaticTable = [PSCustomObject][Ordered]@{
-        Address = "0.0.0.0/0"
-        TableNumber = "11"
-        NextHop = "100.3.102.1"
-    }#>
-
+  
     PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnlyPolicy"
         SourceAddress = "10.172.72.0/22"
@@ -1177,9 +1228,13 @@ set system offload ipv4 vlan enable
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        Address = "10.0.0.1/24"
-        UsePolicyRouteForTrafficDestinedToWAN = $True
-        PolicyName = "InternetOnlyWiFi"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
+       <# PolicyName = "InternetOnlyWiFi"#>
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 1
+            VIP = "10.0.0.10/24"
+            AuthenticationPasswordStateEntry = 5367
+        }
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -1188,21 +1243,26 @@ set system offload ipv4 vlan enable
         UseForWANLoadBalancing = $True
         Weight = 100
         UseForDestinationNat = $True
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 2
+            VIP = "100.3.102.29/24", "100.3.102.30"
+            AuthenticationPasswordStateEntry = 5367
+        }
      },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
         Description = "Comcast-Coax"
         VIFVlan = 22
-        UseForWANLoadBalancing = $True
+        UseAsDMZInterface = $True
         Weight = 0
-    },
-    [PSCustomObject][Ordered]@{
-       Name = "eth3"
-       Address = "192.168.2.1/24"
-       LoadBalanceIngressTrafficDestinedToWAN= $True
-   }
-     
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 3
+            VIP = "96.71.118.165/27", "96.71.118.166"
+            AuthenticationPasswordStateEntry = 5367
+        }
+    }
     
+        
     StaticRoute = [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
         NextHop = "100.3.102.1"
@@ -1212,30 +1272,22 @@ set system offload ipv4 vlan enable
         NextHop = "96.71.118.190"
     }
    
-    PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
-        Name = "InternetOnlyWiFi"
-        SourceAddress = "10.0.0.2"
-        NextHop = "100.3.102.1"
-    } 
-    
+        
     NetworkWANNAT = [PSCustomObject][Ordered]@{
-        InterfaceName = "eth2"
-        VIFVlan = "20"
+        InboundInterface = "eth2.20"
         Protocol = "tcp"
         Port = "3389"
-        Description = "RDP1-Fios150"
+        Description = "RDP1.Fios150"
         PrivateIPAddress = "192.168.2.2"
-        PublicIPAddress = "100.3.102.29/24"
-
         },
+        
         [PSCustomObject][Ordered]@{
-        InterfaceName = "eth2"
-        VIFVlan = "22"
+        InboundInterface = "eth2.22"
         Protocol = "tcp"
         Port = "3389"
-        Description = "RDP1-ComcastCoax"
+        Description = "RDP1.ComcastCoax"
         PrivateIPAddress = "192.168.2.2"
-        PublicIPAddress = "96.71.118.165/27"
+        
         }
 
     AdditionalCommands = @"
