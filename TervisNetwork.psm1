@@ -927,7 +927,7 @@ function New-EdgeOSDMZInterfaceStanza {
     )
     $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
 
-    @"
+@"
 set interfaces ethernet $EthernetInterfaceStanza firewall in name WAN_IN
 set interfaces ethernet $EthernetInterfaceStanza firewall local name WAN_LOCAL
 "@    

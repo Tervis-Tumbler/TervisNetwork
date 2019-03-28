@@ -1026,7 +1026,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Description = "ComcastFiber"
         VIFVlan = 23
         UseForWANLoadBalancing = $True
-        Weight = 0
+        Weight = 100
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 2
             VIP = "50.239.201.214/29"
@@ -1040,7 +1040,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         UseAsDMZInterface = $True
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 9
-            VIP = "50.237.206.60/27"
+            VIP = "50.237.206.60/27" , "50.237.206.59"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1049,7 +1049,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Description = "Fios150"
         VIFVlan = 20
         UseForWANLoadBalancing = $True
-        Weight = 100
+        Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
             VIP = "100.3.102.16/24"
@@ -1179,8 +1179,16 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnlyPolicy"
         SourceAddress = "10.172.72.0/22"
         NextHop = "100.3.102.1"      
-    }   
+    } 
     
+    NetworkWANNAT = [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.23"
+        Protocol = "tcp"
+        Port = "3389"
+        Description = "RDP1.ComcastFiber"
+        PrivateIPAddress = "10.172.30.100"
+        }
+                    
     AdditionalCommands = @"
 set firewall all-ping enable
 set firewall broadcast-ping disable
