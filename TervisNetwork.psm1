@@ -418,42 +418,41 @@ function Set-EdgeOSDHCPServer {
         
      
     )
-    process {
-
-        $DhcpCommands = (
-@"
+    begin {
+        $DhcpCommands = @"
 set service dhcp-server shared-network-name $Name authoritative disable
 set service dhcp-server shared-network-name $Name subnet $Subnet default-router $DefaultRouter
 set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $PrimaryDnsServer
 set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $SecondaryDnsServer
 set service dhcp-server shared-network-name $Name subnet $Subnet lease $Lease
 set service dhcp-server shared-network-name $Name subnet $Subnet start $StartIP stop $StopIP
-"@ )           
-        
+"@  -split "`r`n"
+
+    }
+    process {
         $DhcpFailoverStatus = $NetworkNode | where {$_.DhcpFailover} | select -ExpandProperty DhcpFailoverStatus 
         if ($DhcpFailoverStatus -EQ "Primary") {
-            $DhcpFailoverCommands = (
-@"
+            $DhcpFailoverCommands = @"
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $PrimaryLocalAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $PrimaryPeerAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status primary
-"@ )          
+"@  -split "`r`n"
         }
         else {
-           $DhcpFailoverCommands = (
-@"
+           $DhcpFailoverCommands = @"
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $SecondaryLocalAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $SecondaryPeerAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status secondary
-"@ )              
+"@  -split "`r`n"
         }
+        $FinalDhcpCommands = $DhcpCommands + $DhcpFailoverCommands
     
-        $DhcpCommands -split "`r`n" |
+        $FinalDhcpCommands |
         Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
-        $DhcpFailoverCommands -split "`r`n" |
-        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession 
+        # $DhcpFailoverCommands -split "`r`n" |
+        # Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession 
     }
 }
 function Add-EdgeOSSystemImage {
