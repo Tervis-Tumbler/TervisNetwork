@@ -506,6 +506,8 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     ComputerName = "INF-EdgeRouterTest1"
     OperatingSystemName = "EdgeOS"
     ManagementIPAddress = "192.168.1.1"
+    DhcpFailover = $True
+    DhcpFailoverStatus = "Primary"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Inside"
@@ -534,6 +536,8 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     ComputerName = "INF-EdgeRouterTest2"
     OperatingSystemName = "EdgeOS"
     ManagementIPAddress = "192.168.1.1"
+    DhcpFailover = $True
+    DhcpFailoverStatus = "Secondary"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Inside"
@@ -1236,8 +1240,8 @@ set system offload ipv4 vlan enable
     },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
-        LoadBalanceIngressTrafficDestinedToWAN = $True
-       <# PolicyName = "InternetOnlyWiFi"#>
+        UsePolicyRouteForTrafficDestinedToWAN = $True
+        PolicyName = "InternetOnlyWiFi"
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 1
             VIP = "10.0.0.10/24"
@@ -1250,10 +1254,9 @@ set system offload ipv4 vlan enable
         VIFVlan = 20
         UseForWANLoadBalancing = $True
         Weight = 100
-        UseForDestinationNat = $True
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 2
-            VIP = "100.3.102.29/24", "100.3.102.30"
+            VIP = "100.3.102.29/24"
             AuthenticationPasswordStateEntry = 5367
         }
      },
@@ -1261,11 +1264,11 @@ set system offload ipv4 vlan enable
         Name = "eth2"
         Description = "Comcast-Coax"
         VIFVlan = 22
-        UseAsDMZInterface = $True
+        UseForWANLoadBalancing = $True
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
-            VIP = "96.71.118.165/27", "96.71.118.166"
+            VIP = "96.71.118.165/27"
             AuthenticationPasswordStateEntry = 5367
         }
     }
@@ -1279,24 +1282,31 @@ set system offload ipv4 vlan enable
        Address = "0.0.0.0/0"
         NextHop = "96.71.118.190"
     }
-   
+
+    PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
+        Name = "InternetOnlyWiFi"
+        SourceAddress = "10.0.0.0/24"
+        NextHop = "100.3.102.1"      
+       
+    }
+
+    DhcpServer = [PSCustomObject][Ordered]@{
+        Name = "InternetOnly"
+        Subnet = "10.0.0.0/24"
+        DefaultRouter = "10.0.0.10"
+        Lease = "86400"
+        StartIP = "10.0.0.50"
+        StopIP = "10.0.0.100"
+        PrimaryDnsServer = "208.67.220.220" 
+        SecondaryDnsServer = "208.67.222.222"
+        FailoverName = "Failover"
+        PrimaryLocalAddress = "10.0.0.1"
+        PrimaryPeerAddress = "10.0.0.5"
+        SecondaryLocalAddress = "10.0.0.5"
+        SecondaryPeerAddress = "10.0.0.1"
+        }    
         
-    NetworkWANNAT = [PSCustomObject][Ordered]@{
-        InboundInterface = "eth2.20"
-        Protocol = "tcp"
-        Port = "3389"
-        Description = "RDP1.Fios150"
-        PrivateIPAddress = "192.168.2.2"
-        },
         
-        [PSCustomObject][Ordered]@{
-        InboundInterface = "eth2.22"
-        Protocol = "tcp"
-        Port = "3389"
-        Description = "RDP1.ComcastCoax"
-        PrivateIPAddress = "192.168.2.2"
-        
-        }
 
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -1307,6 +1317,7 @@ set firewall ip-src-route disable
 set firewall log-martians disable
 set firewall group network-group LAN_NETS network 192.168.1.0/24
 set firewall group network-group LAN_NETS network 192.168.2.0/24
+set firewall group network-group LAN_NETS network 10.0.0.0/24
 set firewall receive-redirects disable
 set firewall send-redirects disable
 set firewall source-validation disable

@@ -398,6 +398,64 @@ set firewall name WAN_IN rule $NextAvailableWANINRuleNumber destination port $Po
          }
     }
 }
+
+function Set-EdgeOSDHCPServer {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Subnet,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$DefaultRouter,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Lease,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$StartIP,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$StopIP,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrimaryDnsServer,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryDnsServer,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$FailoverName,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrimaryLocalAddress,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrimaryPeerAddress,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryLocalAddress,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryPeerAddress
+        
+     
+    )
+    process {
+
+        $DhcpCommands = (
+@"
+set service dhcp-server shared-network-name $Name authoritative disable
+set service dhcp-server shared-network-name $Name subnet $Subnet default-router $DefaultRouter
+set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $PrimaryDnsServer
+set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $SecondaryDnsServer
+set service dhcp-server shared-network-name $Name subnet $Subnet lease $Lease
+set service dhcp-server shared-network-name $Name subnet $Subnet start $StartIP stop $StopIP
+"@ )           
+        
+        $DhcpFailoverStatus = $NetworkNode | where {$_.DhcpFailover} | select -ExpandProperty DhcpFailoverStatus 
+        if ($DhcpFailoverStatus -EQ "Primary") {
+            $DhcpFailoverCommands = (
+@"
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $PrimaryLocalAddress
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $PrimaryPeerAddress
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status primary
+"@ )          
+        }
+        else {
+           $DhcpFailoverCommands = (
+@"
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $SecondaryLocalAddress
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $SecondaryPeerAddress
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status secondary
+"@ )              
+        }
+    
+        $DhcpCommands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
+        $DhcpFailoverCommands -split "`r`n" |
+        Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession 
+    }
+}
 function Add-EdgeOSSystemImage {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
@@ -653,6 +711,11 @@ function Invoke-NetworkNodeProvision {
         where {$_.NetworkWANNAT} | 
         Select -ExpandProperty NetworkWANNAT | 
         Set-EdgeOSWANINAclRule -SSHSession $NetworkNode.SSHSession
+        
+        $NetworkNode | 
+        where {$_.DhcpServer} | 
+        Select -ExpandProperty DhcpServer |
+        Set-EdgeOSDHCPServer -SSHSession $NetworkNode.SSHSession
         
         #$NetworkNode | 
         #where {$_.TunnelMemberDefinition} | 
