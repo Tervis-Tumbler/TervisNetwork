@@ -387,6 +387,8 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     TemplateName = "INF-ERWAN"
     ComputerName = "INF-ERWAN01"
     ManagementIPAddress = "INF-ERWAN01"
+    DhcpFailover = $True
+    DhcpFailoverStatus = "Primary"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Fios25"
@@ -404,12 +406,6 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Description = "Fios150"
         VIFVlan = 20
         Address = "100.3.102.4/24"
-    },
-    [PSCustomObject][Ordered]@{
-        Name = "eth1"
-        Description = "ComcastFiberDMZ"
-        VIFVlan = 29
-        Address = "50.237.206.36/27"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -446,6 +442,8 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
     TemplateName = "INF-ERWAN"
     ComputerName = "INF-ERWAN02"
     ManagementIPAddress = "INF-ERWAN02"
+    DhcpFailover = $True
+    DhcpFailoverStatus = "Secondary"
     InterfaceDefinition = [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Fios25"
@@ -463,12 +461,6 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Description = "Fios150"
         VIFVlan = 20
         Address = "100.3.102.6/24"
-    },
-    [PSCustomObject][Ordered]@{
-        Name = "eth1"
-        Description = "ComcastFiberDMZ"
-        VIFVlan = 29
-        Address = "50.237.206.38/27"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -1037,7 +1029,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             AuthenticationPasswordStateEntry = 5367
         }
     },
-    [PSCustomObject][Ordered]@{
+    <#[PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "ComcastFiberDMZ"
         VIFVlan = 29
@@ -1047,7 +1039,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             VIP = "50.237.206.60/27" , "50.237.206.59"
             AuthenticationPasswordStateEntry = 5367
         }
-    },
+    },#>
     [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Fios150"
@@ -1184,14 +1176,30 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         SourceAddress = "10.172.72.0/22"
         NextHop = "100.3.102.1"      
     } 
+
+    DhcpServer = [PSCustomObject][Ordered]@{
+        Name = "WifiDataInternetOnly"
+        Subnet = "10.172.72.0/22"
+        DefaultRouter = "10.172.72.6"
+        Lease = "86400"
+        StartIP = "10.172.72.20"
+        StopIP = "10.172.75.250"
+        PrimaryDnsServer = "208.67.220.220" 
+        SecondaryDnsServer = "208.67.222.222"
+        FailoverName = "DataInternetOnlyFailover"
+        PrimaryLocalAddress = "10.172.72.5"
+        PrimaryPeerAddress = "10.172.72.4"
+        SecondaryLocalAddress = "10.172.72.4"
+        SecondaryPeerAddress = "10.172.72.5"
+        }    
     
-    NetworkWANNAT = [PSCustomObject][Ordered]@{
+    <#NetworkWANNAT = [PSCustomObject][Ordered]@{
         InboundInterface = "eth1.23"
         Protocol = "tcp"
         Port = "3389"
         Description = "RDP1.ComcastFiber"
         PrivateIPAddress = "10.172.30.100"
-        }
+        }#>
                     
     AdditionalCommands = @"
 set firewall all-ping enable
