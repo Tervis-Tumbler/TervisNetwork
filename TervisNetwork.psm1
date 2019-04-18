@@ -432,18 +432,18 @@ set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $Dns
         $DhcpFailoverStatus = $NetworkNode | Where-Object {$_.DhcpFailover} | Select-Object -ExpandProperty DhcpFailoverStatus 
         if ($DhcpFailoverStatus -EQ "Primary") {
             $DhcpFailoverCommands = @"
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $PrimaryLocalAddress
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $SecondaryLocalAddress
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status primary
+set service dhcp-server shared-network-name $Name subnet $Subnet failover local-address $PrimaryLocalAddress
+set service dhcp-server shared-network-name $Name subnet $Subnet failover name $FailoverName
+set service dhcp-server shared-network-name $Name subnet $Subnet failover peer-address $SecondaryLocalAddress
+set service dhcp-server shared-network-name $Name subnet $Subnet failover status primary
 "@  -split "`r`n"
         }
         else {
            $DhcpFailoverCommands = @"
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $SecondaryLocalAddress
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $PrimaryLocalAddress
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status secondary
+set service dhcp-server shared-network-name $Name subnet $Subnet failover local-address $SecondaryLocalAddress
+set service dhcp-server shared-network-name $Name subnet $Subnet failover name $FailoverName
+set service dhcp-server shared-network-name $Name subnet $Subnet failover peer-address $PrimaryLocalAddress
+set service dhcp-server shared-network-name $Name subnet $Subnet failover status secondary
 "@  -split "`r`n"
         }
         $FinalDhcpCommands = $DhcpCommands + $DhcpFailoverCommands
