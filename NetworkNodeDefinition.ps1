@@ -1184,13 +1184,10 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Lease = "86400"
         StartIP = "10.172.72.20"
         StopIP = "10.172.75.250"
-        PrimaryDnsServer = "208.67.220.220" 
-        SecondaryDnsServer = "208.67.222.222"
+        DnsServers = "208.67.220.220" , "208.67.222.222"
         FailoverName = "DataInternetOnlyFailover"
         PrimaryLocalAddress = "10.172.72.5"
-        PrimaryPeerAddress = "10.172.72.4"
         SecondaryLocalAddress = "10.172.72.4"
-        SecondaryPeerAddress = "10.172.72.5"
         }    
     
     <#NetworkWANNAT = [PSCustomObject][Ordered]@{
@@ -1305,13 +1302,10 @@ set system offload ipv4 vlan enable
         Lease = "86400"
         StartIP = "10.0.0.50"
         StopIP = "10.0.0.100"
-        PrimaryDnsServer = "208.67.220.220" 
-        SecondaryDnsServer = "208.67.222.222"
+        DnsServers = "208.67.220.220" , "208.67.222.222"
         FailoverName = "Failover"
         PrimaryLocalAddress = "10.0.0.1"
-        PrimaryPeerAddress = "10.0.0.5"
         SecondaryLocalAddress = "10.0.0.5"
-        SecondaryPeerAddress = "10.0.0.1"
         }    
         
         

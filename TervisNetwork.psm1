@@ -408,30 +408,33 @@ function Set-EdgeOSDHCPServer {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Lease,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$StartIP,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$StopIP,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrimaryDnsServer,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryDnsServer,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$DnsServers,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$FailoverName,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrimaryLocalAddress,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrimaryPeerAddress,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryLocalAddress,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryPeerAddress
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SecondaryLocalAddress
     )
+    
     process {
+        
         $DhcpCommands = @"
 set service dhcp-server shared-network-name $Name authoritative disable
 set service dhcp-server shared-network-name $Name subnet $Subnet default-router $DefaultRouter
-set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $PrimaryDnsServer
-set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $SecondaryDnsServer
 set service dhcp-server shared-network-name $Name subnet $Subnet lease $Lease
 set service dhcp-server shared-network-name $Name subnet $Subnet start $StartIP stop $StopIP
 "@  -split "`r`n"
-   
-      $DhcpFailoverStatus = $NetworkNode | where {$_.DhcpFailover} | select -ExpandProperty DhcpFailoverStatus 
+        
+        $DhcpCommands += 
+        foreach ($DnsServer in $DnsServers) {            
+ @"
+set service dhcp-server shared-network-name $Name subnet $Subnet dns-server $DnsServer
+"@ -split "`r`n"
+        }
+        $DhcpFailoverStatus = $NetworkNode | Where-Object {$_.DhcpFailover} | Select-Object -ExpandProperty DhcpFailoverStatus 
         if ($DhcpFailoverStatus -EQ "Primary") {
             $DhcpFailoverCommands = @"
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $PrimaryLocalAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $PrimaryPeerAddress
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $SecondaryLocalAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status primary
 "@  -split "`r`n"
         }
@@ -439,7 +442,7 @@ set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover
            $DhcpFailoverCommands = @"
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover local-address $SecondaryLocalAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover name $FailoverName
-set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $SecondaryPeerAddress
+set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover peer-address $PrimaryLocalAddress
 set service dhcp-server shared-network-name InternetOnly subnet $Subnet failover status secondary
 "@  -split "`r`n"
         }
@@ -681,7 +684,7 @@ function Invoke-NetworkNodeProvision {
     if ($NetworkNode.OperatingSystemName -in "EdgeOS","VyOS") {
         #$NetworkNode | Set-EedgeOSUser
         $NetworkNode | Set-EdgeOSSystemHostName
-        $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
+    $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
         $NetWorkNode | Invoke-EdgeOSInterfaceProvision
         
         $NetWorkNode | 
