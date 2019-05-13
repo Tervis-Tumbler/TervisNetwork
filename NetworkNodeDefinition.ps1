@@ -408,10 +408,22 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Address = "100.3.102.4/24"
     },
     [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Description = "ComcastFiberDMZ"
+        VIFVlan = 29
+        Address = "50.237.206.36/27"
+    },
+    [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 48
         Description = "Infrastructure"
         Address = "10.172.48.78/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 44
+        Description = "ServerScope"
+        Address = "10.172.44.51/24"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -463,10 +475,22 @@ $NetworkNodeDefinition = [PSCustomObject][Ordered]@{
         Address = "100.3.102.6/24"
     },
     [PSCustomObject][Ordered]@{
+        Name = "eth1"
+        Description = "ComcastFiberDMZ"
+        VIFVlan = 29
+        Address = "50.237.206.38/27"
+    },
+    [PSCustomObject][Ordered]@{
         Name = "eth2"
         VIFVlan = 48
         Description = "Infrastructure"
         Address = "10.172.48.150/24"
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 44
+        Description = "ServerScope"
+        Address = "10.172.44.52/24"
     },
     [PSCustomObject][Ordered]@{
         Name = "eth2"
@@ -1029,17 +1053,18 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             AuthenticationPasswordStateEntry = 5367
         }
     },
-    <#[PSCustomObject][Ordered]@{
+    [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "ComcastFiberDMZ"
         VIFVlan = 29
         UseAsDMZInterface = $True
+        Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 9
-            VIP = "50.237.206.60/27" , "50.237.206.59"
+            VIP = "50.237.206.60/27" , "50.237.206.40"
             AuthenticationPasswordStateEntry = 5367
         }
-    },#>
+    },
     [PSCustomObject][Ordered]@{
         Name = "eth1"
         Description = "Fios150"
@@ -1048,7 +1073,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
-            VIP = "100.3.102.16/24"
+            VIP = "100.3.102.16/24" , "100.3.102.9"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1060,6 +1085,17 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 4
             VIP = "10.172.48.77/24"
+            AuthenticationPasswordStateEntry = 5367
+        }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "eth2"
+        VIFVlan = 44
+        Description = "ServerScope"
+        LoadBalanceIngressTrafficDestinedToWAN = $True
+        VRRPGroup = [PSCustomObject][Ordered]@{
+            Number = 10
+            VIP = "10.172.44.50/24"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1168,7 +1204,12 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     [PSCustomObject][Ordered]@{
         Address = "0.0.0.0/0"
         NextHop = "100.3.102.1"
-    }
+    },
+    [PSCustomObject][Ordered]@{
+        Address = "0.0.0.0/0"
+        NextHop = "50.237.206.33"
+    }    
+
 
   
     PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
@@ -1177,7 +1218,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         NextHop = "100.3.102.1"      
     } 
 
-    DhcpServer = [PSCustomObject][Ordered]@{
+    <#DhcpServer = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnly"
         Subnet = "10.172.72.0/22"
         DefaultRouter = "10.172.72.6"
@@ -1188,15 +1229,22 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         FailoverName = "DataInternetOnlyFailover"
         PrimaryLocalAddress = "10.172.72.5"
         SecondaryLocalAddress = "10.172.72.4"
-        }    
+    }#>   
     
-    <#NetworkWANNAT = [PSCustomObject][Ordered]@{
-        InboundInterface = "eth1.23"
+    NetworkWANNAT = [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.29"
         Protocol = "tcp"
-        Port = "3389"
-        Description = "RDP1.ComcastFiber"
-        PrivateIPAddress = "10.172.30.100"
-        }#>
+        Port = "443"
+        Description = "inf-rdwebacc01.comcastfiber"
+        PrivateIPAddress = "10.172.48.27"
+    },
+        [PSCustomObject][Ordered]@{
+            InboundInterface = "eth1.20"
+            Protocol = "tcp"
+            Port = "443"
+            Description = "inf-rdwebacc01.fios150"
+            PrivateIPAddress = "10.172.48.27"
+    }
                     
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -1295,6 +1343,22 @@ set system offload ipv4 vlan enable
        
     }
 
+    NetworkWANNAT = [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.20"
+        Protocol = "tcp"
+        Port = "3389"
+        Description = "rdp1.fios150"
+        PrivateIPAddress = "10.172.30.100"
+    },
+    
+    [PSCustomObject][Ordered]@{
+            InboundInterface = "eth2.22"
+            Protocol = "tcp"
+            Port = "3389"
+            Description = "rdp1.comcastcoax"
+            PrivateIPAddress = "10.172.30.100"
+    }
+
     DhcpServer = [PSCustomObject][Ordered]@{
         Name = "InternetOnly"
         Subnet = "10.0.0.0/24"
@@ -1306,7 +1370,7 @@ set system offload ipv4 vlan enable
         FailoverName = "Failover"
         PrimaryLocalAddress = "10.0.0.1"
         SecondaryLocalAddress = "10.0.0.5"
-        }    
+        } 
         
         
 

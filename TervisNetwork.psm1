@@ -684,7 +684,7 @@ function Invoke-NetworkNodeProvision {
     if ($NetworkNode.OperatingSystemName -in "EdgeOS","VyOS") {
         #$NetworkNode | Set-EedgeOSUser
         $NetworkNode | Set-EdgeOSSystemHostName
-    $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
+        $NetworkNode | Set-EdgeOSSystemTimeZone -TimeZone "US/Eastern"        
         $NetWorkNode | Invoke-EdgeOSInterfaceProvision
         
         $NetWorkNode | 
@@ -982,11 +982,20 @@ set interfaces ethernet $EthernetInterfaceStanza firewall local name WAN_LOCAL
 function New-EdgeOSDMZInterfaceStanza {
     param (
         $InterfaceName,
-        $VIFVlan
+        $VIFVlan,
+        $Weight
     )
     $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
 
+    $InterfaceStanza = if ($VIFVlan) { 
+        "$InterfaceName.$VIFVlan" 
+    } else {
+        $InterfaceName
+    }
+
 @"
+set load-balance group G interface $InterfaceStanza
+set load-balance group G interface $InterfaceStanza weight $Weight
 set interfaces ethernet $EthernetInterfaceStanza firewall in name WAN_IN
 set interfaces ethernet $EthernetInterfaceStanza firewall local name WAN_LOCAL
 "@    
