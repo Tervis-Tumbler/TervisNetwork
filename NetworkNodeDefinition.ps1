@@ -1218,7 +1218,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         NextHop = "100.3.102.1"      
     } 
 
-    <#DhcpServer = [PSCustomObject][Ordered]@{
+    DhcpServer = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnly"
         Subnet = "10.172.72.0/22"
         DefaultRouter = "10.172.72.6"
@@ -1229,7 +1229,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         FailoverName = "DataInternetOnlyFailover"
         PrimaryLocalAddress = "10.172.72.5"
         SecondaryLocalAddress = "10.172.72.4"
-    }#>   
+    }   
     
     NetworkWANNAT = [PSCustomObject][Ordered]@{
         InboundInterface = "eth1.29"
