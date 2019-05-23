@@ -1061,7 +1061,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 9
-            VIP = "50.237.206.60/27" , "50.237.206.40"
+            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" 
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1073,7 +1073,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
-            VIP = "100.3.102.16/24" , "100.3.102.9"
+            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1218,7 +1218,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         NextHop = "100.3.102.1"      
     } 
 
-    DhcpServer = [PSCustomObject][Ordered]@{
+    <#DhcpServer = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnly"
         Subnet = "10.172.72.0/22"
         DefaultRouter = "10.172.72.6"
@@ -1229,7 +1229,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         FailoverName = "DataInternetOnlyFailover"
         PrimaryLocalAddress = "10.172.72.5"
         SecondaryLocalAddress = "10.172.72.4"
-    }   
+    }   #>
     
     NetworkWANNAT = [PSCustomObject][Ordered]@{
         InboundInterface = "eth1.29"
@@ -1244,7 +1244,58 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             Port = "443"
             Description = "inf-rdwebacc01.fios150"
             PrivateIPAddress = "10.172.48.27"
-    }
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.29"
+        Protocol = "tcp"
+        Port = "443"
+        Description = "rdgateway.comcastfiber"
+        PrivateIPAddress = "10.172.44.99"
+},
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.20"
+        Protocol = "tcp"
+        Port = "443"
+        Description = "rdgateway.fios150"
+        PrivateIPAddress = "10.172.44.99"
+},
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.29"
+        Protocol = "tcp"
+        Port = "8080,8081,8443,8843,8880"
+        Description = "unifi.comcastfiber"
+        PrivateIPAddress = "10.172.48.53"
+},
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.20"
+        Protocol = "tcp"
+        Port = "8080,8081,8443,8843,8880"
+        Description = "unifi.fios150"
+        PrivateIPAddress = "10.172.48.53"
+}    
+<#
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.29"
+        Protocol = "tcp_udp"
+        Port = "5060"
+        Description = "informacast.comcastfiber"
+        PrivateIPAddress = "10.172.48.35"
+        NetworkGroup = [PSCustomObject][Ordered]@{
+            Name = "OBJ-INFORMACAST-ALLOWED"
+            Network = "34.203.250.0/23" , "54.172.60.0/23" , "54.244.51.0/24"
+    }    
+},
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.20"
+        Protocol = "tcp_udp"
+        Port = "5060"
+        Description = "informacast.fios150"
+        PrivateIPAddress = "10.172.48.35"
+        NetworkGroup = [PSCustomObject][Ordered]@{
+            Name = "OBJ-INFORMACAST-ALLOWED"
+            Network = "30.203.250.0/23" , "54.172.60.0/23" , "54.244.51.0/24"
+        }    
+}#>
                     
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -1349,17 +1400,32 @@ set system offload ipv4 vlan enable
         Port = "3389"
         Description = "rdp1.fios150"
         PrivateIPAddress = "10.172.30.100"
+        NetworkGroup = [PSCustomObject][Ordered]@{
+            Name = "OBJ-INFORMACAST-ALLOWED"
+            Network = "30.203.250.0/23" , "54.172.60.0/23"  
+        }
     },
     
-    [PSCustomObject][Ordered]@{
+    <#[PSCustomObject][Ordered]@{
             InboundInterface = "eth2.22"
             Protocol = "tcp"
             Port = "3389"
             Description = "rdp1.comcastcoax"
             PrivateIPAddress = "10.172.30.100"
-    }
+    },#>
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.22"
+        Protocol = "tcp"
+        Port = "3389"
+        Description = "rdp1.comcastcoax"
+        PrivateIPAddress = "10.172.30.100"
+        NetworkGroup = [PSCustomObject][Ordered]@{
+            Name = "OBJ-INFORMACAST-ALLOWED"
+            Network = "30.203.250.0/23" , "54.172.60.0/23"
+        }    
+}
 
-    DhcpServer = [PSCustomObject][Ordered]@{
+    <#DhcpServer = [PSCustomObject][Ordered]@{
         Name = "InternetOnly"
         Subnet = "10.0.0.0/24"
         DefaultRouter = "10.0.0.10"
@@ -1370,10 +1436,9 @@ set system offload ipv4 vlan enable
         FailoverName = "Failover"
         PrimaryLocalAddress = "10.0.0.1"
         SecondaryLocalAddress = "10.0.0.5"
-        } 
-        
-        
+        } #>
 
+     
     AdditionalCommands = @"
 set firewall all-ping enable
 set firewall broadcast-ping disable

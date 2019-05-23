@@ -308,6 +308,20 @@ function Set-EdgeOSProtocolsStaticRoute {
     }
 }
 
+<#function Set-EdgeOSNetworkGroup {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Network
+    )
+    process {
+        #$Networks = $NetworkGroup.Network
+        foreach ($Net in $Network) {
+            Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall group network-group $Name network $Net" -SSHSession $SSHSession
+        }
+    }
+}#>
+
 function Set-EdgeOSPolicyBasedRouteDefaultRouteSourceAddressBased {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
@@ -341,7 +355,8 @@ function Set-EdgeOSDestinationNatRule {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Protocol,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Port,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Description,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrivateIPAddress
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrivateIPAddress,
+        [Parameter(ValueFromPipelineByPropertyName)]$NetworkGroup
                 
     )
     process {
@@ -355,10 +370,10 @@ set service nat rule $NextAvailableDestinationNatRuleNumber log disable
 set service nat rule $NextAvailableDestinationNatRuleNumber protocol $Protocol
 set service nat rule $NextAvailableDestinationNatRuleNumber type destination
 set service nat rule $NextAvailableDestinationNatRuleNumber inside-address address $PrivateIPAddress
-set service nat rule $NextAvailableDestinationNatRuleNumber inside-address port $Port
 set service nat rule $NextAvailableDestinationNatRuleNumber destination address $PublicIPAddress
 set service nat rule $NextAvailableDestinationNatRuleNumber destination port $Port
 "@ )
+        
         $ExistingDestinationNatRule = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession | 
             Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
         $Matches = $ExistingDestinationNatRule -match [Regex]::Escape($Description)
@@ -366,6 +381,15 @@ set service nat rule $NextAvailableDestinationNatRuleNumber destination port $Po
             ($commands -split "`r`n") |
             Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
         }
+        if ($NetworkGroup) {
+            $Networks = $NetworkGroup.Network
+            foreach ($Network in $Networks) {
+                Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall group network-group $($NetworkGroup.Name) network $Network" -SSHSession $SSHSession
+        }
+        if  ($NetworkGroup)  {
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set service nat rule $NextAvailableDestinationNatRuleNumber source group network-group $($NetworkGroup.Name)" -SSHSession $SSHSession
+        }
+    }
     }
 }
 
@@ -375,7 +399,8 @@ function Set-EdgeOSWANINAclRule {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Protocol,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Port,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Description,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrivateIPAddress
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrivateIPAddress,
+        [Parameter(ValueFromPipelineByPropertyName)]$NetworkGroup
        
     )
     process {
@@ -395,7 +420,11 @@ set firewall name WAN_IN rule $NextAvailableWANINRuleNumber destination port $Po
         if (-not $Matches) {
             ($commands -split "`r`n") |
             Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
-         }
+        }
+        if ($NetworkGroup) {
+            Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall name WAN_IN rule $NextAvailableWANINRuleNumber source group network-group $($NetworkGroup.Name)" -SSHSession $SSHSession
+        }
+         
     }
 }
 
@@ -691,6 +720,12 @@ function Invoke-NetworkNodeProvision {
         where {$_.StaticRoute} | 
         Select -ExpandProperty StaticRoute |
         Set-EdgeOSProtocolsStaticRoute -SSHSession $NetworkNode.SSHSession
+
+        <#$NetworkNode | 
+        where {$_.NetworkGroup} |
+        select -ExpandProperty NetworkGroup |
+        Set-EdgeOSNetworkGroup -SSHSession $NetworkNode.SSHSession#>
+        
       
         $NetWorkNode | 
         where {$_.PolicyBasedRouteDefaultRouteSourceAddressBased} | 
