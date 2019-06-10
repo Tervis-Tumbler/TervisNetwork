@@ -1061,7 +1061,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 9
-            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" 
+            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" , "50.237.206.47" , "50.237.206.51"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1073,7 +1073,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
-            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15"
+            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15" , "100.3.102.28" , "100.3.102.21"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1246,33 +1246,61 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             PrivateIPAddress = "10.172.48.27"
     },
         [PSCustomObject][Ordered]@{
-        InboundInterface = "eth1.29"
-        Protocol = "tcp"
-        Port = "443"
-        Description = "rdgateway.comcastfiber"
-        PrivateIPAddress = "10.172.44.99"
+            InboundInterface = "eth1.29"
+            Protocol = "tcp"
+            Port = "443"
+            Description = "rdgateway.comcastfiber"
+            PrivateIPAddress = "10.172.44.99"
 },
         [PSCustomObject][Ordered]@{
-        InboundInterface = "eth1.20"
-        Protocol = "tcp"
-        Port = "443"
-        Description = "rdgateway.fios150"
-        PrivateIPAddress = "10.172.44.99"
+            InboundInterface = "eth1.20"
+            Protocol = "tcp"
+            Port = "443"
+            Description = "rdgateway.fios150"
+            PrivateIPAddress = "10.172.44.99"
 },
         [PSCustomObject][Ordered]@{
-        InboundInterface = "eth1.29"
-        Protocol = "tcp"
-        Port = "8080,8081,8443,8843,8880"
-        Description = "unifi.comcastfiber"
-        PrivateIPAddress = "10.172.48.53"
+            InboundInterface = "eth1.29"
+            Protocol = "tcp"
+            Port = "8080,8081,8443,8843,8880"
+            Description = "unifi.comcastfiber"
+            PrivateIPAddress = "10.172.48.53"
 },
         [PSCustomObject][Ordered]@{
-        InboundInterface = "eth1.20"
-        Protocol = "tcp"
-        Port = "8080,8081,8443,8843,8880"
-        Description = "unifi.fios150"
-        PrivateIPAddress = "10.172.48.53"
-}    
+            InboundInterface = "eth1.20"
+            Protocol = "tcp"
+            Port = "8080,8081,8443,8843,8880"
+            Description = "unifi.fios150"
+            PrivateIPAddress = "10.172.48.53"
+},
+        [PSCustomObject][Ordered]@{
+            InboundInterface = "eth1.29"
+            Protocol = "tcp"
+            Port = "443,49443"
+            Description = "adfs.comcastfiber"
+            PrivateIPAddress = "10.172.48.38"
+},
+        [PSCustomObject][Ordered]@{
+            InboundInterface = "eth1.20"
+            Protocol = "tcp"
+            Port = "443,49443"
+            Description = "adfs.fios150"
+            PrivateIPAddress = "10.172.48.38"
+},
+        [PSCustomObject][Ordered]@{
+            InboundInterface = "eth1.29"
+            Protocol = "tcp"
+            Port = "80"
+            Description = "envoy.comcastfiber"
+            PrivateIPAddress = "10.172.48.103"
+},
+        [PSCustomObject][Ordered]@{
+            InboundInterface = "eth1.20"
+            Protocol = "tcp"
+            Port = "80"
+            Description = "envoy.fios150"
+            PrivateIPAddress = "10.172.48.103"
+}                
 <#
         [PSCustomObject][Ordered]@{
         InboundInterface = "eth1.29"
