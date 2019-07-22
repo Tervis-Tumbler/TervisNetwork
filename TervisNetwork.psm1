@@ -1047,7 +1047,7 @@ set firewall modify balance rule 30 action modify
 set firewall modify balance rule 30 destination group address-group ADDRv4_eth1.20
 set firewall modify balance rule 30 modify table main
 set firewall modify balance rule 40 action modify
-set firewall modify balance rule 40 destination group address-group ADDRv4_eth1.21
+set firewall modify balance rule 40 destination group address-group ADDRv4_eth1.22
 set firewall modify balance rule 40 modify table main
 set firewall modify balance rule 50 action modify
 set firewall modify balance rule 50 destination group address-group ADDRv4_eth1.23
