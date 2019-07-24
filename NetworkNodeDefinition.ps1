@@ -1061,7 +1061,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 9
-            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" , "50.237.206.47" , "50.237.206.51" , "50.237.206.39"
+            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" , "50.237.206.47" , "50.237.206.51" , "50.237.206.39" , "50.237.206.46" , "50.237.206.42"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1073,7 +1073,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
-            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15" , "100.3.102.28" , "100.3.102.21" , "100.3.102.8"
+            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15" , "100.3.102.28" , "100.3.102.21" , "100.3.102.8" , "100.3.102.22" , "100.3.102.11"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1323,7 +1323,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             Name = "OBJ-INFORMACAST-ALLOWED"
             Network = "30.203.250.0/23" , "54.172.60.0/23" , "54.244.51.0/24"
         }    
-    },
+    },#>
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.29"
             Protocol = "tcp"
@@ -1351,7 +1351,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             Port = "100"
             Description = "mesiis.fios150"
             PrivateIPAddress = "10.172.44.141"
-    },#>
+    },
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.29"
             Protocol = "tcp"
