@@ -1037,7 +1037,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 11
-            VIP = "96.71.118.163/27"
+            VIP = "96.71.118.163/27" , "96.71.118.177"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1061,7 +1061,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 9
-            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" , "50.237.206.47" , "50.237.206.51" , "50.237.206.39" , "50.237.206.46" , "50.237.206.42"
+            VIP = "50.237.206.60/27" , "50.237.206.40" , "50.237.206.45" , "50.237.206.43" , "50.237.206.47" , "50.237.206.51" , "50.237.206.39" , "50.237.206.46" , "50.237.206.42" , "50.237.206.52"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1073,7 +1073,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Weight = 0
         VRRPGroup = [PSCustomObject][Ordered]@{
             Number = 3
-            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15" , "100.3.102.28" , "100.3.102.21" , "100.3.102.8" , "100.3.102.22" , "100.3.102.11"
+            VIP = "100.3.102.16/24" , "100.3.102.9" , "100.3.102.19" , "100.3.102.15" , "100.3.102.28" , "100.3.102.21" , "100.3.102.8" , "100.3.102.22" , "100.3.102.11" , "100.3.102.24"
             AuthenticationPasswordStateEntry = 5367
         }
     },
@@ -1372,7 +1372,7 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             Port = "29173"
             Description = "vcffeedsftp.comcastfiber"
             PrivateIPAddress = "10.172.44.78"
-        },                     
+    },                     
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.20"
             Protocol = "tcp"
@@ -1386,14 +1386,35 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
             Port = "29171"
             Description = "noscosftp.comcastfiber"
             PrivateIPAddress = "10.172.44.105"
-        },                     
+    },                     
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.20"
             Protocol = "tcp"
             Port = "29171"
             Description = "noscosftp.fios150"
             PrivateIPAddress = "10.172.44.105"
-        }                                        
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.29"
+        Protocol = "tcp_udp"
+        Port = "50,51,41,443,4500,500"
+        Description = "alwaysonvpn.comcastfiber"
+        PrivateIPAddress = "10.172.48.108"
+    },                     
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.20"
+        Protocol = "tcp_udp"
+        Port = "50,51,41,443,4500,500"
+        Description = "alwaysonvpn.fios150"
+        PrivateIPAddress = "10.172.48.108"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1.22"
+        Protocol = "tcp_udp"
+        Port = "50,51,41,443,4500,500"
+        Description = "alwaysonvpn.comcastcoax"
+        PrivateIPAddress = "10.172.48.108"
+}                                                                                                                    
                     
     AdditionalCommands = @"
 set firewall all-ping enable
