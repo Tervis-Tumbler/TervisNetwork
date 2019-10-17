@@ -1186,6 +1186,10 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         NextHop = "10.2.2.1"
     },
     [PSCustomObject][Ordered]@{
+        Address = "10.55.5.0/24"
+        NextHop = "10.172.48.108"
+    },    
+    [PSCustomObject][Ordered]@{
         Address = "192.168.100.0/24"
         NextHop = "10.2.2.1"
     },    
@@ -1215,10 +1219,59 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnlyPolicy"
         SourceAddress = "10.172.72.0/22"
-        NextHop = "100.3.102.1"      
-    } 
+        tableNumber = "11"
+        Routes = [PSCustomObject][Ordered]@{
+            NextHop = "100.3.102.1"
+            StaticRoute = "0.0.0.0/0"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.48.27/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.44.99/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.48.53/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.48.38/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.48.103/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.44.97/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.44.78/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.44.105/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.44.74/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.44.141/32"
+        },
+        [PSCustomObject][Ordered]@{
+            NextHop = "10.172.48.250"
+            StaticRoute = "10.172.48.108/32"
+        }                                                                        
 
-    <#DhcpServer = [PSCustomObject][Ordered]@{
+    }
+    <#
+    DhcpServer = [PSCustomObject][Ordered]@{
         Name = "WifiDataInternetOnly"
         Subnet = "10.172.72.0/22"
         DefaultRouter = "10.172.72.6"
@@ -1229,8 +1282,8 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         FailoverName = "DataInternetOnlyFailover"
         PrimaryLocalAddress = "10.172.72.5"
         SecondaryLocalAddress = "10.172.72.4"
-    }   #>
-    
+    }   
+    #>
     NetworkWANNAT = [PSCustomObject][Ordered]@{
         InboundInterface = "eth1.29"
         Protocol = "tcp"
@@ -1261,15 +1314,15 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
     },
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.29"
-            Protocol = "tcp"
-            Port = "8080,8081,8443,8843,8880"
+            Protocol = "tcp_udp"
+            Port = "8080,8081,8443,8843,8880,3478"
             Description = "unifi.comcastfiber"
             PrivateIPAddress = "10.172.48.53"
     },
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.20"
-            Protocol = "tcp"
-            Port = "8080,8081,8443,8843,8880"
+            Protocol = "tcp_udp"
+            Port = "8080,8081,8443,8843,8880,3478"
             Description = "unifi.fios150"
             PrivateIPAddress = "10.172.48.53"
     },
@@ -1290,17 +1343,18 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.29"
             Protocol = "tcp"
-            Port = "80"
+            Port = "80,443"
             Description = "envoy.comcastfiber"
             PrivateIPAddress = "10.172.48.103"
     },
         [PSCustomObject][Ordered]@{
             InboundInterface = "eth1.20"
             Protocol = "tcp"
-            Port = "80"
+            Port = "80,443"
             Description = "envoy.fios150"
             PrivateIPAddress = "10.172.48.103"
-    },<#            
+    },
+        <#       
 
         [PSCustomObject][Ordered]@{
         InboundInterface = "eth1.29"
@@ -1414,7 +1468,339 @@ $NetworkNodeDefinitionTemplate = [PSCustomObject][Ordered]@{
         Port = "50,51,41,443,4500,500"
         Description = "alwaysonvpn.comcastcoax"
         PrivateIPAddress = "10.172.48.108"
-}                                                                                                                    
+} 
+    NetworkLANNAT = [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "inf-rdwebacc01.comcastfiber"
+        Description = "TervisWiFiToRdWebComcastFiber"
+        PrivateIPAddress = "10.172.48.27"
+        SourceAddress = "10.172.72.0/22"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "inf-rdwebacc01.fios150"
+        Description = "TervisWiFiToRdWebFios150"
+        PrivateIPAddress = "10.172.48.27"
+        SourceAddress = "10.172.72.0/22"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "rdgateway.comcastfiber"
+        Description = "TervisWiFiToRdGatewayComcastFiber"
+        PrivateIPAddress = "10.172.44.99"
+        SourceAddress = "10.172.72.0/22"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "rdgateway.fios150"
+        Description = "TervisWiFiToRdGatewayFios150"
+        PrivateIPAddress = "10.172.44.99"
+        SourceAddress = "10.172.72.0/22"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "8080,8081,8443,8843,8880"
+        DnsHost = "unifi.comcastfiber"
+        Description = "TervisWiFiToUnifiComcastFiber"
+        PrivateIPAddress = "10.172.48.53"
+        SourceAddress = "10.172.72.0/22"
+    }, 
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "8080,8081,8443,8843,8880"
+        DnsHost = "unifi.fios150"
+        Description = "TervisWiFiToUnifiFios150"
+        PrivateIPAddress = "10.172.48.53"
+        SourceAddress = "10.172.72.0/22"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "443,49443"
+        DnsHost = "adfs.comcastfiber"
+        Description = "TervisWiFiToAdfsComcastFiber"
+        PrivateIPAddress = "10.172.48.38"
+        SourceAddress = "10.172.72.0/22"
+    },      
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "443,49443"
+        DnsHost = "adfs.fios150"
+        Description = "TervisWiFiToAdfsFios150"
+        PrivateIPAddress = "10.172.48.38"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "80,443"
+        DnsHost = "envoy.comcastfiber"
+        Description = "TervisWiFiToEnvoyComcastFiber"
+        PrivateIPAddress = "10.172.48.103"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "80,443"
+        DnsHost = "envoy.fios150"
+        Description = "TervisWiFiToEnvoyFios150"
+        PrivateIPAddress = "10.172.48.103"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "29174"
+        DnsHost = "demandwaresftp.comcastfiber"
+        Description = "TervisWiFiToDemandwaresftpComcastfiber"
+        PrivateIPAddress = "10.172.44.97"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "29174"
+        DnsHost = "demandwaresftp.fios150"
+        Description = "TervisWiFiToDemandwaresftpFios150"
+        PrivateIPAddress = "10.172.44.97"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "29173"
+        DnsHost = "vcffeedsftp.comcastfiber"
+        Description = "TervisWiFiToVcffeedComcastfiber"
+        PrivateIPAddress = "10.172.44.78"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "29173"
+        DnsHost = "vcffeedsftp.fios150"
+        Description = "TervisWiFiToVcffeedFios150"
+        PrivateIPAddress = "10.172.44.78"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "29171"
+        DnsHost = "noscosftp.comcastfiber"
+        Description = "TervisWiFiToNoscoComcastfiber"
+        PrivateIPAddress = "10.172.44.105"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "29171"
+        DnsHost = "noscosftp.fios150"
+        Description = "TervisWiFiToNoscoFios150"
+        PrivateIPAddress = "10.172.44.105"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "20,21,49152-65535"
+        DnsHost = "demandwareftp.comcastfiber"
+        Description = "TervisWiFiToDemandwareftpComcastfiber"
+        PrivateIPAddress = "10.172.44.74"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "20,21,49152-65535"
+        DnsHost = "demandwareftp.fios150"
+        Description = "TervisWiFiToDemandwareftpFios150"
+        PrivateIPAddress = "10.172.44.74"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "100"
+        DnsHost = "mesiis.comcastfiber"
+        Description = "TervisWiFiToMesiisComcastfiber"
+        PrivateIPAddress = "10.172.44.141"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp"
+        Port = "100"
+        DnsHost = "mesiis.fios150"
+        Description = "TervisWiFiToMesiisFios150"
+        PrivateIPAddress = "10.172.44.141"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp_udp"
+        Port = "50,51,41,443,4500,500"
+        DnsHost = "alwaysonvpn.comcastfiber"
+        Description = "TervisWiFiToAlwaysonvpnComcastfiber"
+        PrivateIPAddress = "10.172.48.108"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp_udp"
+        Port = "50,51,41,443,4500,500"
+        DnsHost = "alwaysonvpn.fios150"
+        Description = "TervisWiFiToAlwaysonvpnFios150"
+        PrivateIPAddress = "10.172.48.108"
+        SourceAddress = "10.172.72.0/22"
+    },
+    [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.72"
+        Protocol = "tcp_udp"
+        Port = "50,51,41,443,4500,500"
+        DnsHost = "alwaysonvpn.comcastcoax"
+        Description = "TervisWiFiToAlwaysonvpnComcastcoax"
+        PrivateIPAddress = "10.172.48.108"
+        SourceAddress = "10.172.72.0/22"
+    }
+                
+    FirewallNamePolicy = [PSCustomObject][Ordered]@{
+        Name = "TervisWiFiIN"
+        Direction = "in"
+        DefaultAction = "accept"
+        Interface = [PSCustomObject][Ordered]@{
+           InterfaceName = "eth2"
+           VIFVLAN = "72"
+        }
+        RuleSet = [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "RDGATEWAY"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.99"
+            DestinationPort = "443"
+            Order = "1"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "RDWEB"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.27"
+            DestinationPort = "443"
+            Order = "2"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "UNIFI"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.53"
+            DestinationPort = "8080,8081,8443,8843,8880"
+            Order = "3"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "ADFS"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.38"
+            DestinationPort = "443,49443"
+            Order = "4"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "ENVOY"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.103"
+            DestinationPort = "80,443"
+            Order = "5"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "DEMANDWARESFTP"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.97"
+            DestinationPort = "29174"
+            Order = "6"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "VCFFEEDSFTP"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.78"
+            DestinationPort = "29173"
+            Order = "7"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "NOSCOSFTP"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.105"
+            DestinationPort = "29171"
+            Order = "8"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "DEMANDWAREFTP"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.74"
+            DestinationPort = "20,21,49152-65535"
+            Order = "9"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "MESIIS"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.141"
+            DestinationPort = "100"
+            Order = "10"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "ALWAYSONVPN"
+            Protocol = "tcp_udp"
+            DestinationAddress = "10.172.48.108"
+            DestinationPort = "50,51,41,443,4500,500"
+            Order = "11"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "drop"
+            Description = "DenyAll"
+            Protocol = "all"
+            DestinationGroup = "LAN_NETS"
+            SourceAddress = "10.172.72.0/22"
+            Order = "9999"
+        }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "TervisWiFiLOCAL"
+        Direction = "local"
+        DefaultAction = "accept"
+        Interface = [PSCustomObject][Ordered]@{
+           InterfaceName = "eth2"
+           VIFVLAN = "72"
+        }
+        RuleSet = [PSCustomObject][Ordered]@{
+            Action = "drop"
+            Description = "DropTrafficToRouterInterface"
+            Protocol = "tcp"
+            DestinationPort = "https,ssh,telnet"
+            SourceAddress = "10.172.72.0/22"
+            Order = "1"
+        }
+    }    
+
+
                     
     AdditionalCommands = @"
 set firewall all-ping enable
@@ -1509,7 +1895,19 @@ set system offload ipv4 vlan enable
     PolicyBasedRouteDefaultRouteSourceAddressBased = [PSCustomObject][Ordered]@{
         Name = "InternetOnlyWiFi"
         SourceAddress = "10.0.0.0/24"
-        NextHop = "100.3.102.1"      
+        tableNumber = "11"
+        Routes = [PSCustomObject][Ordered]@{
+            NextHop = "100.3.102.1"
+            StaticRoute = "0.0.0.0/0"
+        },
+        [PSCustomObject][Ordered]@{
+        NextHop = "10.172.48.250"
+        StaticRoute = "10.172.48.27/32"
+        },
+        [PSCustomObject][Ordered]@{
+        NextHop = "10.172.48.250"
+        StaticRoute = "10.172.44.19/32"
+        }      
        
     }
 
@@ -1525,13 +1923,14 @@ set system offload ipv4 vlan enable
         }
     },
     
-    <#[PSCustomObject][Ordered]@{
+    [PSCustomObject][Ordered]@{
             InboundInterface = "eth2.22"
             Protocol = "tcp"
             Port = "3389"
             Description = "rdp1.comcastcoax"
             PrivateIPAddress = "10.172.30.100"
-    },#>
+    },
+    
     [PSCustomObject][Ordered]@{
         InboundInterface = "eth2.22"
         Protocol = "tcp"
@@ -1541,10 +1940,148 @@ set system offload ipv4 vlan enable
         NetworkGroup = [PSCustomObject][Ordered]@{
             Name = "OBJ-INFORMACAST-ALLOWED"
             Network = "30.203.250.0/23" , "54.172.60.0/23"
-        }    
+        }
+    },
+    [PSCustomObject][Ordered]@{
+            InboundInterface = "eth2.20"
+            Protocol = "tcp"
+            Port = "443"
+            Description = "inf-rdwebacc01.fios150"
+            PrivateIPAddress = "10.172.48.27"
+            
+    },
+    [PSCustomObject][Ordered]@{
+            InboundInterface = "eth2.20"
+            Protocol = "tcp"
+            Port = "443"
+            Description = "rdgateway.comcastfiber"
+            PrivateIPAddress = "10.172.44.99"
+              
+        }     
+        
+    
+    NetworkLANNAT = [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.22"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "inf-rdwebacc01.comcastfiber"
+        Description = "TervisWiFiToRdWebComcastFiber"
+        PrivateIPAddress = "10.172.48.27"
+        SourceAddress = "10.0.0.0/24"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.20"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "inf-rdwebacc01.fios150"
+        Description = "TervisWiFiToRdWebFios150"
+        PrivateIPAddress = "10.172.48.27"
+        SourceAddress = "10.0.0.0/24"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth2.22"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "rdgateway.comcastfiber"
+        Description = "TervisWiFiToRdGatewayComcastFiber"
+        PrivateIPAddress = "10.172.44.99"
+        SourceAddress = "10.0.0.0/24"
+    },
+        [PSCustomObject][Ordered]@{
+        InboundInterface = "eth1"
+        Protocol = "tcp"
+        Port = "443"
+        DnsHost = "rdgateway.fios150"
+        Description = "TervisWiFiToRdGatewayFios150"
+        PrivateIPAddress = "10.172.44.99"
+        SourceAddress = "10.0.0.0/24"
+
 }
 
-    <#DhcpServer = [PSCustomObject][Ordered]@{
+    FirewallNamePolicy = [PSCustomObject][Ordered]@{
+        Name = "TervisWiFiIN"
+        Direction = "in"
+        DefaultAction = "accept"
+        Interface = [PSCustomObject][Ordered]@{
+            InterfaceName = "eth1"
+
+        },
+            [PSCustomObject][Ordered]@{
+                InterfaceName = "eth2"
+                   
+        }
+        RuleSet = [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "RDGATEWAY"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.44.99"
+            DestinationPort = "443"
+            Order = "1"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "RDWEB"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.27"
+            DestinationPort = "443"
+            Order = "2"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "RDWEB1"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.28"
+            DestinationPort = "443"
+            Order = "3"
+        },
+        [PSCustomObject][Ordered]@{
+            Action = "drop"
+            Description = "DenyAll"
+            Protocol = "all"
+            DestinationGroup = "LAN_NETS"
+            SourceAddress = "10.172.72.0/22"
+            Order = "9999"
+        }
+    },
+    [PSCustomObject][Ordered]@{
+        Name = "TervisWiFiLOCAL"
+        Direction = "local"
+        DefaultAction = "accept"
+        Interface = [PSCustomObject][Ordered]@{
+           InterfaceName = "eth1"
+        }
+        RuleSet = [PSCustomObject][Ordered]@{
+            Action = "drop"
+            Description = "DropTrafficToRouterInterface"
+            Protocol = "tcp"
+            DestinationPort = "https,ssh,telnet"
+            SourceAddress = "10.0.0.0/24"
+            Order = "1"
+        }
+    }    
+
+       <# [PSCustomObject][Ordered]@{
+        Name = "TervisTest"
+        DefaultAction = "accept"
+        Interface = [PSCustomObject][Ordered]@{
+            InterfaceName = "eth2"
+        },
+            [PSCustomObject][Ordered]@{
+                InterfaceName = "eth2"
+                VIFVLAN = "20"    
+        }
+    
+        RuleSet = [PSCustomObject][Ordered]@{
+            Action = "accept"
+            Description = "RDWEB-NEW"
+            Protocol = "tcp"
+            DestinationAddress = "10.172.48.26"
+            DestinationPort = "443"
+            Order = "1"
+        }
+    }
+    
+         <# DhcpServer = [PSCustomObject][Ordered]@{
         Name = "InternetOnly"
         Subnet = "10.0.0.0/24"
         DefaultRouter = "10.0.0.10"
@@ -1556,7 +2093,7 @@ set system offload ipv4 vlan enable
         PrimaryLocalAddress = "10.0.0.1"
         SecondaryLocalAddress = "10.0.0.5"
         } #>
-
+    
      
     AdditionalCommands = @"
 set firewall all-ping enable

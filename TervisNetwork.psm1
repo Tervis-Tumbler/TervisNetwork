@@ -327,15 +327,20 @@ function Set-EdgeOSPolicyBasedRouteDefaultRouteSourceAddressBased {
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SourceAddress,
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$NextHop  
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$tableNumber,
+        [Parameter(ValueFromPipelineByPropertyName)]$Routes  
     )
     process {
-        $NextAvailableStaticTablePolicyRuleNumber = Get-EdgeOSNextAvailableStaticTablePolicyRuleNumber -SSHSession $SSHSession
+        $NextAvailableModifyNamedRuleNumber = Get-EdgeOSNextAvailableModifyNamedRuleNumber -SSHSession $SSHSession -Name $Name
+        
+        foreach ($Route in $Routes) {
+        Invoke-EdgeOSSSHConfigureModeCommand -Command "set protocols static table $tableNumber route $($Route.StaticRoute) next-hop $($Route.NextHop)" -SSHSession $SSHSession
+        }
+        #set protocols static table $NextAvailableStaticTablePolicyRuleNumber route 0.0.0.0/0 next-hop $NextHop
         $commands = (
 @"
-set protocols static table $NextAvailableStaticTablePolicyRuleNumber route 0.0.0.0/0 next-hop $NextHop
-set firewall modify $Name rule $NextAvailableStaticTablePolicyRuleNumber modify table $NextAvailableStaticTablePolicyRuleNumber
-set firewall modify $Name rule $NextAvailableStaticTablePolicyRuleNumber source address $SourceAddress 
+set firewall modify $Name rule $NextAvailableModifyNamedRuleNumber modify table $tableNumber
+set firewall modify $Name rule $NextAvailableModifyNamedRuleNumber source address $SourceAddress 
 "@ )
         $ExistingSourceAddress = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "source address"' -SSHSession $SSHSession |
                         Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
@@ -348,6 +353,45 @@ set firewall modify $Name rule $NextAvailableStaticTablePolicyRuleNumber source 
     }
 }
 
+function Set-EdgeOSLANDestinationNATRule {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$InboundInterface,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Protocol,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Port,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Description,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$PrivateIPAddress,
+        [Parameter(ValueFromPipelineByPropertyName)]$NetworkGroup,
+        [Parameter(ValueFromPipelineByPropertyName)]$DnsHost,
+        [Parameter(ValueFromPipelineByPropertyName)]$SourceAddress
+        
+    ) 
+    process {
+        $NextAvailableDestinationNatRuleNumber = Get-EdgeOSNextAvailableNATRuleNumber -SSHSession $SSHSession -Type Destination
+        $PublicIPAddress = Resolve-DnsName -Name $DnsHost".tervis.com" -Server 4.2.2.2 | Select-Object -ExpandProperty IPAddress
+
+        $commands = ( 
+@"
+set service nat rule $NextAvailableDestinationNatRuleNumber description $Description
+set service nat rule $NextAvailableDestinationNatRuleNumber inbound-interface $InboundInterface
+set service nat rule $NextAvailableDestinationNatRuleNumber log disable
+set service nat rule $NextAvailableDestinationNatRuleNumber protocol $Protocol
+set service nat rule $NextAvailableDestinationNatRuleNumber type destination
+set service nat rule $NextAvailableDestinationNatRuleNumber inside-address address $PrivateIPAddress
+set service nat rule $NextAvailableDestinationNatRuleNumber destination address $PublicIPAddress
+set service nat rule $NextAvailableDestinationNatRuleNumber destination port $Port
+set service nat rule $NextAvailableDestinationNatRuleNumber source address $SourceAddress
+"@ )
+
+        $ExistingDestinationNatRule = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "nat rule"' -SSHSession $SSHSession | 
+            Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
+        $Matches = $ExistingDestinationNatRule -match [Regex]::Escape($Description)
+        if (-not $Matches) {
+            ($commands -split "`r`n") |
+            Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
+        }
+    }    
+}
 function Set-EdgeOSDestinationNatRule {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
@@ -387,6 +431,7 @@ set service nat rule $NextAvailableDestinationNatRuleNumber destination port $Po
                 Invoke-EdgeOSSSHConfigureModeCommand -Command "set firewall group network-group $($NetworkGroup.Name) network $Network" -SSHSession $SSHSession
         }
         if  ($NetworkGroup)  {
+
         Invoke-EdgeOSSSHConfigureModeCommand -Command "set service nat rule $NextAvailableDestinationNatRuleNumber source group network-group $($NetworkGroup.Name)" -SSHSession $SSHSession
         }
     }
@@ -428,6 +473,86 @@ set firewall name WAN_IN rule $NextAvailableWANINRuleNumber destination port $Po
     }
 }
 
+function Set-EdgeOSFirewallNameRule {
+    param (
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Direction,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Interface,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$RuleSet,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$DefaultAction
+    )
+    process {
+        $RuleSet | foreach {
+            if (-not $_.DestinationGroup) {
+
+        $commands = (
+@"
+set firewall name $Name default-action $DefaultAction
+set firewall name $Name rule $($_.Order) action $($_.Action)
+set firewall name $Name rule $($_.Order) description $($_.Description)
+set firewall name $Name rule $($_.Order) log disable 
+set firewall name $Name rule $($_.Order) protocol $($_.Protocol)
+set firewall name $Name rule $($_.Order) destination address $($_.DestinationAddress)
+set firewall name $Name rule $($_.Order) destination port $($_.DestinationPort)
+set firewall name $Name rule $($_.Order) source address $($_.SourceAddress)
+"@ )
+            } else {
+         $commands = (       
+@"
+set firewall name $Name default-action $DefaultAction
+set firewall name $Name rule $($_.Order) action $($_.Action)
+set firewall name $Name rule $($_.Order) description $($_.Description)
+set firewall name $Name rule $($_.Order) log disable 
+set firewall name $Name rule $($_.Order) protocol $($_.Protocol)
+set firewall name $Name rule $($_.Order) destination group network-group $($_.DestinationGroup)
+set firewall name $Name rule $($_.Order) source address $($_.SourceAddress)
+"@ )
+
+            }    
+        
+        $ExistingWANINAclRule = Invoke-EdgeOSSSHOperationalModeCommand -Command "show configuration commands | grep $Name" -SSHSession $SSHSession | 
+            Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
+        $Matches = $ExistingWANINAclRule -match [Regex]::Escape($_.Description)
+        if (-not $Matches) {
+            ($commands -split "`r`n") |
+            Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $SSHSession
+        }
+    } 
+    
+    
+    
+    
+        # $InterfaceNames = $($Interface.Name)
+        # $VIFVLANS = $($Interface.VIFVLAN)
+        # foreach ($InterfaceName in $Interfaces) {
+            
+        
+        # $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $InterfaceName -VIFVlan $VIFVlan
+        # Invoke-EdgeOSSSHConfigureModeCommand "set interfaces ethernet $EthernetInterfaceStanza firewall in name $Name" -SSHSession $SSHSession
+        # }
+           
+        $Interface | foreach {
+            $InterfaceName = $_.InterfaceName
+            $VIFVLAN = $_.VIFVLAN
+            $EthernetInterfaceStanza = Get-EdgeOSEtherNetInterfaceStanza -Name $_.InterfaceName -VIFVlan $_.VIFVlan
+            #$InterfaceName = $_.InterfaceName
+            #$VIFVLAN = $_.VIFVLAN 
+           <# $EthernetInterfaceStanza = if ($_.VIFVLAN) {
+                 "$Interfacename vif $VIFVLAN"
+            } else {
+                $InterfaceName
+            }#>
+            if ($Direction -eq "in") {
+            Invoke-EdgeOSSSHConfigureModeCommand "set interfaces ethernet $EthernetInterfaceStanza firewall in name $Name" -SSHSession $SSHSession
+            } else {
+                Invoke-EdgeOSSSHConfigureModeCommand "set interfaces ethernet $EthernetInterfaceStanza firewall local name $Name" -SSHSession $SSHSession
+            }
+        }
+    }
+    }    
+    
+    
 function Set-EdgeOSDHCPServer {
     param (
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
@@ -581,10 +706,11 @@ function Invoke-EdgeOSSSHOperationalModeCommand {
     param (
         [Parameter(Mandatory)]$Command,
         [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+        
     )
     process {
         $CommandToExecute = "/opt/vyatta/bin/vyatta-op-cmd-wrapper " + $Command
-        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession
+        Invoke-EdgeOSSSHCommand -Command $CommandToExecute -SSHSession $SSHSession 
     }   
 }
 
@@ -739,9 +865,15 @@ function Invoke-NetworkNodeProvision {
         Set-EdgeOSDestinationNatRule -SSHSession $NetworkNode.SSHSession
 
         $NetworkNode | 
+        where {$_.NetworkLANNAT} |
+        select -ExpandProperty NetworkLANNAT |
+        Set-EdgeOSLANDestinationNatRule -SSHSession $NetworkNode.SSHSession
+
+        $NetworkNode | 
         where {$_.NetworkWANNAT} | 
         Select -ExpandProperty NetworkWANNAT | 
         Set-EdgeOSWANINAclRule -SSHSession $NetworkNode.SSHSession
+
         
         $NetworkNode | 
         where {$_.DhcpServer} | 
@@ -756,6 +888,11 @@ function Invoke-NetworkNodeProvision {
 
         $NetworkNode.AdditionalCommands -split "`r`n" |
         Invoke-EdgeOSSSHConfigureModeCommand -SSHSession $NetworkNode.SSHSession
+
+        $NetworkNode | 
+        where {$_.FirewallNamePolicy} | 
+        select -ExpandProperty FirewallNamePolicy |
+        Set-EdgeOSFirewallNameRule -SSHSession $NetworkNode.SSHSession
 
         $NetWorkNode | Invoke-EdgeOSInterfaceUseProvision
 
@@ -1174,21 +1311,22 @@ function Get-EdgeOSNextAvailableNATRuleNumber {
     }
 }
 
-function Get-EdgeOSNextAvailableStaticTablePolicyRuleNumber {
+function Get-EdgeOSNextAvailableModifyNamedRuleNumber {
     param (
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$SSHSession,
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]$Name
     )
     process {
-        $Results = Invoke-EdgeOSSSHOperationalModeCommand -Command 'show configuration commands | grep "static table"' -SSHSession $SSHSession | 
+        $Results = Invoke-EdgeOSSSHOperationalModeCommand -Command "show configuration commands | grep $Name" -SSHSession $SSHSession | 
         Select-Object -ExpandProperty Output -ErrorAction SilentlyContinue
         
-        [int]$LastStaticTableNumberUsed = $Results -split "`r`n" | 
-        Select-StringBetween -After "set protocols static table " -Before " " |
+        [int]$LastModifyNamedRuleUsed = $Results -split "`r`n" | 
+        Select-StringBetween -After "set firewall modify $Name rule " -Before " " |
         Sort-Object -Unique -Descending |
         Select-Object -First 1
 
-        if ($LastStaticTableNumberUsed) {
-            $LastStaticTableNumberUsed + 1
+        if ($LastModifyNamedRuleUsed) {
+            $LastModifyNamedRuleUsed + 1
         } else {
             11
         }
